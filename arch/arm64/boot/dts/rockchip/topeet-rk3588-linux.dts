@@ -233,8 +233,9 @@
         /* rx_delay = <0x3f>; */
 
         phy-handle = <&rgmii_phy1>;
-        status = "okay";
+        status = "disable";
 };
+
 &mdio0 {
         rgmii_phy0: phy@1 {
                 compatible = "ethernet-phy-ieee802.3-c22";
@@ -263,6 +264,13 @@
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&uart0m2_xfer>;
+};
+
+// 红外机芯
+&uart7 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart7m0_xfer>;
 };
 
 //HDMIIN

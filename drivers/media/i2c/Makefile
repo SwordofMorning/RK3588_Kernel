@@ -251,3 +251,4 @@ obj-$(CONFIG_VIDEO_OTP_EEPROM)	+= otp_eeprom.o
 obj-$(CONFIG_VIDEO_PREISP_DUMMY_SENSOR) += preisp-dummy.o
 obj-$(CONFIG_VIDEO_ROCKCHIP_THUNDER_BOOT_ISP)	+= cam-tb-setup.o
 obj-$(CONFIG_VIDEO_CAM_SLEEP_WAKEUP)	+= cam-sleep-wakeup.o
+obj-$(CONFIG_VIDEO_JP_NGD_VIS)	+= jp_ngd_vis.o

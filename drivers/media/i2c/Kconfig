@@ -2580,6 +2580,19 @@ config VIDEO_SGM3784
 	help
 	  This is a driver for the sgm3784 dual flash controllers. It controls
 	  flash, torch LEDs.
+
+config VIDEO_JP_NGD_VIS
+	tristate "Jpvision NGD Vis Camera"
+	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
+	depends on MEDIA_CAMERA_SUPPORT
+	select JP_NGD_VIS
+	default y
+	help
+	  This is a Video4Linux2 sensor driver for the Jpvision
+	  NGD vis camera.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called JP_NGD_VIS.
 endmenu
 
 endif # VIDEO_V4L2
