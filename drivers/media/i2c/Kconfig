@@ -1043,6 +1043,17 @@ config VIDEO_GC2145
 	  To compile this driver as a module, choose M here: the
 	  module will be called gc2145.
 
+config VIDEO_GC2155
+	tristate "GalaxyCore GC2155 sensor support"
+	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
+	depends on MEDIA_CAMERA_SUPPORT
+	select V4L2_FWNODE
+	help
+	  Support for the GalaxyCore GC2155 sensor.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called gc2155.
+
 config VIDEO_GC2385
 	tristate "GalaxyCore GC2385 sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API

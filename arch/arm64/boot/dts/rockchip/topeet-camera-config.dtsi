@@ -37,6 +37,27 @@
 			};
 		};
 	};
+
+	gc2155: gc2155@3c {
+			compatible = "galaxycore,gc2155";
+			reg = <0x3c>;
+			status = "okay";
+			clocks = <&cru CLK_CIFOUT_OUT>;
+			clock-names = "xvclk";
+			pinctrl-names = "default";
+			pinctrl-0 = <&cif_dvp_bus16>, <&cif_dvp_clk>;
+			power-gpios = <&gpio0 RK_PC0 GPIO_ACTIVE_HIGH>;
+			rockchip,camera-module-index = <0>;
+			rockchip,camera-module-facing = "front";
+			rockchip,camera-module-name = "default"; 
+			rockchip,camera-module-lens-name = "default"; 
+
+			port {
+				cam_para_out2: endpoint{
+					remote-endpoint = <&cif_para_in>; 
+				};
+			};
+		};
 };
 
 &csi2_dphy3 {
@@ -148,6 +169,20 @@
 		isp0_vir0: endpoint@0 {
 			reg = <0>;
 			remote-endpoint = <&mipi_lvds4_sditf>;
+		};
+	};
+};
+
+&rkcif_dvp {
+	status = "okay";
+
+	port {
+		cif_para_in: endpoint {
+			remote-endpoint = <&cam_para_out2>;
+			bus-width = <8>;
+			hsync-active = <1>;
+			vsync-active = <1>;
+			pclk-sample = <0>;
 		};
 	};
 };
