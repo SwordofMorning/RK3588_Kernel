@@ -105,14 +105,14 @@
 	};
 
 	//SD卡供电
-	vcc_3v3_sd_s0: vcc-3v3-sd-s0-regulator {
-		compatible = "regulator-fixed";
-		gpio = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&sd_s0_pwr>;
-		regulator-name = "vcc_3v3_sd_s0";
-		enable-active-high;
-	};
+	// vcc_3v3_sd_s0: vcc-3v3-sd-s0-regulator {
+	// 	compatible = "regulator-fixed";
+	// 	gpio = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
+	// 	pinctrl-names = "default";
+	// 	pinctrl-0 = <&sd_s0_pwr>;
+	// 	regulator-name = "vcc_3v3_sd_s0";
+	// 	enable-active-high;
+	// };
 
 	vcc_1v1_nldo_s3: vcc-1v1-nldo-s3 {
 		compatible = "regulator-fixed";
@@ -296,11 +296,11 @@
 		};
 	};
 	
-	sdmmc {
-		sd_s0_pwr: sd-s0-pwr {
-			rockchip,pins = <0 RK_PB7 RK_FUNC_GPIO &pcfg_pull_up>;
-		};
-	};
+	// sdmmc {
+	// 	sd_s0_pwr: sd-s0-pwr {
+	// 		rockchip,pins = <0 RK_PB7 RK_FUNC_GPIO &pcfg_pull_up>;
+	// 	};
+	// };
 };
 
 
@@ -573,18 +573,18 @@
 	status = "okay";
 };
 
-&sdmmc {
-	max-frequency = <150000000>;
-	no-sdio;
-	no-mmc;
-	bus-width = <4>;
-	cap-mmc-highspeed;
-	cap-sd-highspeed;
-	disable-wp;
-	sd-uhs-sdr104;
-	vmmc-supply = <&vcc_3v3_sd_s0>;
-	status = "okay";
-};
+// &sdmmc {
+// 	max-frequency = <150000000>;
+// 	no-sdio;
+// 	no-mmc;
+// 	bus-width = <4>;
+// 	cap-mmc-highspeed;
+// 	cap-sd-highspeed;
+// 	disable-wp;
+// 	sd-uhs-sdr104;
+// 	vmmc-supply = <&vcc_3v3_sd_s0>;
+// 	status = "okay";
+// };
 
 &tsadc {
 	status = "okay";
