@@ -57,77 +57,7 @@
         };
     };
 
-    //es8388声卡
-	// es8388_sound: es8388-sound {
-	// 	status = "okay";
-	// 	compatible = "rockchip,multicodecs-card";
-	// 	rockchip,card-name = "rockchip-es8388";
-	// 	//hp-det-gpio = <&gpio1 RK_PC4 GPIO_ACTIVE_LOW>;
-	// 	io-channels = <&saradc 3>;
-	// 	io-channel-names = "adc-detect";
-	// 	keyup-threshold-microvolt = <1800000>;
-	// 	poll-interval = <100>;
-	// 	spk-con-gpio = <&gpio3 RK_PB2 GPIO_ACTIVE_HIGH>;
-	// 	// hp-con-gpio = <&gpio1 RK_PD2 GPIO_ACTIVE_HIGH>;
-	// 	rockchip,format = "i2s";
-	// 	rockchip,mclk-fs = <256>;
-	// 	rockchip,cpu = <&i2s0_8ch>;
-	// 	rockchip,codec = <&es8388>;
-	// 	rockchip,audio-routing =
-	// 		"Headphone", "LOUT1",
-	// 		"Headphone", "ROUT1",
-	// 		"Speaker", "LOUT2",
-	// 		"Speaker", "ROUT2",
-	// 		"Headphone", "Headphone Power",
-	// 		"Headphone", "Headphone Power",
-	// 		"Speaker", "Speaker Power",
-	// 		"Speaker", "Speaker Power",
-	// 		"LINPUT1", "Main Mic",
-	// 		"LINPUT2", "Main Mic",
-	// 		"RINPUT1", "Headset Mic",
-	// 		"RINPUT2", "Headset Mic";
-	// 	pinctrl-names = "default";
-	// 	play-pause-key {
-	// 		label = "playpause";
-	// 		linux,code = <KEY_PLAYPAUSE>;
-	// 		press-threshold-microvolt = <2000>;
-	// 	};
-	// };
-
-	//耳机插入检测
-        // rk_headset: rk-headset {
-        //         status = "okay";
-        //         compatible = "rockchip_headset";
-        //         headset_gpio = <&gpio1 RK_PC4 GPIO_ACTIVE_LOW>;
-        //         pinctrl-names = "default";
-        //         pinctrl-0 = <&hp_det>;
-        //         io-channels = <&saradc 3>;
-        // };    
-
-    //风扇
-	// fan: pwm-fan {
-	// 	compatible = "pwm-fan";
-	// 	#cooling-cells = <2>;
-	// 	pwms = <&pwm12 0 50000 0>;
-	// 	cooling-levels = <0 50 100 150 200 255>;
-	// 	rockchip,temp-trips = <
-	// 		50000	1
-	// 		55000	2
-	// 		60000	3
-	// 		65000	4
-	// 		70000	5
-	// 	>;
-	// };
-
-    //屏幕3.3V供电
-	// vcc3v3_lcd_n: vcc3v3-lcd0-n {
-	// 	compatible = "regulator-fixed";
-	// 	regulator-name = "vcc3v3_lcd0_n";
-	// 	regulator-boot-on;
-	// 	enable-active-high;
-	// 	gpio = <&gpio1 RK_PB3 GPIO_ACTIVE_HIGH>;
-	// };
-
+	/* HGD 3v3 */
 	vcc_3v3_en: vcc-3v3-en {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_3v3_en";
@@ -137,6 +67,7 @@
 		gpio = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
 	};
 
+	/* HGD 1v8 */
 	vcc_1v8_en: vcc-1v8-en {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_1v8_en";
@@ -146,6 +77,7 @@
 		gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_HIGH>;
 	};
 
+	/* HGD regulator dummy consumer */
 	dummy_consumer {
 		compatible = "dummy-consumer";
 		status = "okay";
@@ -153,68 +85,6 @@
 		vcc1-supply = <&vcc_1v8_en>;
 	};
 };
-
-&i2c6{
-    //RTC实时时钟
-	// hym8563: hym8563@51 {
-	// 	compatible = "haoyu,hym8563";
-	// 	reg = <0x51>;
-	// 	#clock-cells = <0>;
-	// 	clock-frequency = <32768>;
-	// 	clock-output-names = "hym8563";
-	// 	pinctrl-names = "default";
-	// 	pinctrl-0 = <&hym8563_int>;
-	// 	interrupt-parent = <&gpio0>;
-	// 	interrupts = <RK_PB0 IRQ_TYPE_LEVEL_LOW>;
-	// 	wakeup-source;
-	// };   
-};
-
-&i2c7 {
-	status = "okay";
-
-    //es8388声卡
-	// es8388: es8388@11 {
-	// 	status = "okay";
-	// 	#sound-dai-cells = <0>;
-	// 	compatible = "everest,es8388", "everest,es8323";
-	// 	reg = <0x11>;
-	// 	clocks = <&mclkout_i2s0>;
-	// 	clock-names = "mclk";
-	// 	assigned-clocks = <&mclkout_i2s0>;
-	// 	assigned-clock-rates = <12288000>;
-	// 	pinctrl-names = "default";
-	// 	pinctrl-0 = <&i2s0_mclk>;
-	// };
-};
-
-//fan
-// &pwm12 {
-//     status = "okay";
-//     pinctrl-0 = <&pwm12m1_pins>;
-// };
-
-//蜂鸣器
-// &pwm15 {
-//     status = "okay";
-//     pinctrl-0 = <&pwm15m2_pins>;
-// };
-
-//sata硬盘
-// &sata0 {
-// 	status = "okay";
-// };
-
-//nvme固态硬盘
-// &pcie30phy {
-//         rockchip,pcie30-phymode = <PHY_MODE_PCIE_NANBNB>;
-//         status = "okay";
-// };
-
-// &pcie3x4 {
-//         reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
-//         status = "okay";
-// };
 
 //有线网卡配置
 &gmac0 {
@@ -276,16 +146,7 @@
         };
 };
 
-//can
-// &can1 {
-//         status = "disable";
-//         compatible = "rockchip,can-2.0"; //使用can
-//         pinctrl-0 = <&can1m1_pins>;
-//         assigned-clocks = <&cru CLK_CAN1>;
-//         assigned-clock-rates = <100000000>;
-// };
-
-//485
+// 485
 &uart0 {
         status = "okay";
         pinctrl-names = "default";
@@ -299,33 +160,10 @@
         pinctrl-0 = <&uart7m0_xfer>;
 };
 
-//HDMIIN
-// &hdmirx_ctrler {
-//         status = "okay";
-
-//         /* Effective level used to trigger HPD: 0-low, 1-high */
-//         hpd-trigger-level = <1>;
-//         hdmirx-det-gpios = <&gpio1 RK_PD5 GPIO_ACTIVE_LOW>;
-//         pinctrl-names = "default";
-//         pinctrl-0 = <&hdmim1_rx &hdmirx_det>;
-// };
-
-&pinctrl {
- 	// hym8563 {
-	// 	hym8563_int: hym8563-int {
-	// 		rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
-	// 	};
-	// }; 
-
-	// headphone {
-	// 	hp_det: hp-det {
-	// 		rockchip,pins = <1 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
-	// 	};
-	// };
-
-	// hdmi {
-	//         hdmirx_det: hdmirx-det {
-	//                 rockchip,pins = <1 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>;
-	//         };
-	// };
+&i2c6 {
+	pcf8563: pcf8563@51 {
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;
+		#clock-cells = <0>;
+	};
 };
