@@ -95,67 +95,175 @@
 		vcc1-supply = <&vcc_1v8_en>;
                 debug-supply = <&NGD_HGD_vis_en>;
 	};
+
+        //wifi 
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_enable_h>;
+
+		//*
+		//* On the module itself this is one of these (depending
+		// * on the actual card populated):
+		// * - SDIO_RESET_L_WL_REG_ON
+		// * - PDN (power down when low)
+		 //* 1126  GPIO0_A6_dWL_REG_ON:主控唤醒WIFI模块 AP6255 12 pin
+		 //  3588  GPIO2_B6_d/1V8   AP6255_WL_REG_ON  (XXXX)
+		//reset-gpios = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>;
+		//reset-gpios = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio2 RK_PB6 GPIO_ACTIVE_LOW>;
+	};
+        wireless_wlan: wireless-wlan {
+		compatible = "wlan-platdata";
+		//rockchip,grf = <&grf>;
+		rockchip,grf = <&sys_grf>;
+		//clocks = <&rk809 1>;
+		//clock-names = "clk_wifi";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_wake_host>;
+		wifi_chip_type = "ap6255";
+		//WIFI,poweren_gpio = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>; 
+		//WIFI,host_wake_irq = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
+		WIFI,host_wake_irq = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
+		//WIFI,poweren_gpio = <&gpio2 RK_PB6 GPIO_ACTIVE_LOW>;
+		//GPIO2_B7_d/1V8
+		status = "okay";
+		
+	};
+
 };
+
+&i2c6{
+    //RTC实时时钟
+	// hym8563: hym8563@51 {
+	// 	compatible = "haoyu,hym8563";
+	// 	reg = <0x51>;
+	// 	#clock-cells = <0>;
+	// 	clock-frequency = <32768>;
+	// 	clock-output-names = "hym8563";
+	// 	pinctrl-names = "default";
+	// 	pinctrl-0 = <&hym8563_int>;
+	// 	interrupt-parent = <&gpio0>;
+	// 	interrupts = <RK_PB0 IRQ_TYPE_LEVEL_LOW>;
+	// 	wakeup-source;
+	// };   
+};
+
+&i2c7 {
+	status = "okay";
+
+    //es8388声卡
+	// es8388: es8388@11 {
+	// 	status = "okay";
+	// 	#sound-dai-cells = <0>;
+	// 	compatible = "everest,es8388", "everest,es8323";
+	// 	reg = <0x11>;
+	// 	clocks = <&mclkout_i2s0>;
+	// 	clock-names = "mclk";
+	// 	assigned-clocks = <&mclkout_i2s0>;
+	// 	assigned-clock-rates = <12288000>;
+	// 	pinctrl-names = "default";
+	// 	pinctrl-0 = <&i2s0_mclk>;
+	// };
+};
+
+//fan
+// &pwm12 {
+//     status = "okay";
+//     pinctrl-0 = <&pwm12m1_pins>;
+// };
+
+//蜂鸣器
+// &pwm15 {
+//     status = "okay";
+//     pinctrl-0 = <&pwm15m2_pins>;
+// };
+
+//sata硬盘
+// &sata0 {
+// 	status = "okay";
+// };
+
+//nvme固态硬盘
+// &pcie30phy {
+//         rockchip,pcie30-phymode = <PHY_MODE_PCIE_NANBNB>;
+//         status = "okay";
+// };
+
+// &pcie3x4 {
+//         reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
+//         status = "okay";
+// };
 
 //有线网卡配置
-&gmac0 {
-        /* Use rgmii-rxid mode to disable rx delay inside Soc */
-        phy-mode = "rgmii-rxid";
-        clock_in_out = "output";
 
-        snps,reset-active-low;
+//&gmac0 {
+ //       /* Use rgmii-rxid mode to disable rx delay inside Soc */
+ //       phy-mode = "rgmii-rxid";
+ //       clock_in_out = "output";
+//
+  //      snps,reset-active-low;
+    //    /* Reset time is 20ms, 100ms for rtl8211f */
+    //    snps,reset-delays-us = <0 20000 100000>;
+
+  //      pinctrl-names = "default";
+   //     pinctrl-0 = <&gmac0_miim
+    //                 &gmac0_tx_bus2
+    //                 &gmac0_rx_bus2
+    //                 &gmac0_rgmii_clk
+    //                 &gmac0_rgmii_bus>;
+    //    tx_delay = <0x44>;
+    //    /* rx_delay = <0x4f>; */
+
+      //  phy-handle = <&rgmii_phy0>;
+     //   status = "okay";
+//};
+
+//&gmac1 {
+//        /* Use rgmii-rxid mode to disable rx delay inside Soc */
+//        phy-mode = "rgmii-rxid";
+//        clock_in_out = "output";
+
+//        snps,reset-active-low;
         /* Reset time is 20ms, 100ms for rtl8211f */
-        snps,reset-delays-us = <0 20000 100000>;
+//        snps,reset-delays-us = <0 20000 100000>;
+//
+ //       pinctrl-names = "default";
+ //       pinctrl-0 = <&gmac1_miim
+ //                    &gmac1_tx_bus2
+  //                   &gmac1_rx_bus2
+   //                  &gmac1_rgmii_clk
+   //                  &gmac1_rgmii_bus>;
 
-        pinctrl-names = "default";
-        pinctrl-0 = <&gmac0_miim
-                     &gmac0_tx_bus2
-                     &gmac0_rx_bus2
-                     &gmac0_rgmii_clk
-                     &gmac0_rgmii_bus>;
-        tx_delay = <0x44>;
-        /* rx_delay = <0x4f>; */
+     //   tx_delay = <0x43>;
+     //   /* rx_delay = <0x3f>; */
 
-        phy-handle = <&rgmii_phy0>;
-        status = "okay";
-};
+       // phy-handle = <&rgmii_phy1>;
+       // status = "disable";
+//};
 
-&gmac1 {
-        /* Use rgmii-rxid mode to disable rx delay inside Soc */
-        phy-mode = "rgmii-rxid";
-        clock_in_out = "output";
+//&mdio0 {
+//        rgmii_phy0: phy@1 {
+//                compatible = "ethernet-phy-ieee802.3-c22";
+//                reg = <0x1>;
+//        };
+//};
 
-        snps,reset-active-low;
-        /* Reset time is 20ms, 100ms for rtl8211f */
-        snps,reset-delays-us = <0 20000 100000>;
+//&mdio1 {
+//        rgmii_phy1: phy@1 {
+//                compatible = "ethernet-phy-ieee802.3-c22";
+//                reg = <0x1>;
+//        };
+//};
 
-        pinctrl-names = "default";
-        pinctrl-0 = <&gmac1_miim
-                     &gmac1_tx_bus2
-                     &gmac1_rx_bus2
-                     &gmac1_rgmii_clk
-                     &gmac1_rgmii_bus>;
-
-        tx_delay = <0x43>;
-        /* rx_delay = <0x3f>; */
-
-        phy-handle = <&rgmii_phy1>;
-        status = "disable";
-};
-
-&mdio0 {
-        rgmii_phy0: phy@1 {
-                compatible = "ethernet-phy-ieee802.3-c22";
-                reg = <0x1>;
-        };
-};
-
-&mdio1 {
-        rgmii_phy1: phy@1 {
-                compatible = "ethernet-phy-ieee802.3-c22";
-                reg = <0x1>;
-        };
-};
+//can
+// &can1 {
+//         status = "disable";
+//         compatible = "rockchip,can-2.0"; //使用can
+//         pinctrl-0 = <&can1m1_pins>;
+//         assigned-clocks = <&cru CLK_CAN1>;
+//         assigned-clock-rates = <100000000>;
+// };
 
 &uart0 {
         status = "okay";
@@ -190,4 +298,61 @@
 		reg = <0x51>;
 		#clock-cells = <0>;
 	};
+};
+
+&pinctrl {
+	/* WIFI_REG_ON脚的pinctrl的配置 */
+	sdio-pwrseq {
+		
+		wifi_enable_h: wifi-enable-h {
+			/* 对应上面的WIFI_REG_ON，关掉上下拉，防止不能拉高或拉低 */
+			//rockchip,pins = <0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
+			//(XXXX)
+			rockchip,pins = <2 RK_PB6 RK_FUNC_GPIO &pcfg_pull_none>;
+						
+		};
+	};
+	/* wifi节点 */
+	wireless-wlan {
+		/omit-if-no-ref/
+		wifi_wake_host: wifi-wake-host {
+			rockchip,pins = <2 RK_PB7 0 &pcfg_pull_down>;	//(XXXX)
+		};
+	};
+
+ 	// hym8563 {
+	// 	hym8563_int: hym8563-int {
+	// 		rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
+	// 	};
+	// }; 
+
+	// headphone {
+	// 	hp_det: hp-det {
+	// 		rockchip,pins = <1 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
+	// 	};
+	// };
+
+	// hdmi {
+	//         hdmirx_det: hdmirx-det {
+	//                 rockchip,pins = <1 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>;
+	//         };
+	// };
+};
+
+&sdio {
+        max-frequency = <100000000>; //设置最大的频率，可以根据硬件设计改小
+        supports-sdio;
+		no-sd;
+        no-mmc;
+        bus-width = <4>; 
+        disable-wp;
+        cap-sd-highspeed; //此配置同 SD 卡功能，作为 SDIO 外设，也有区分是否为 highspeed 的 SDIO 外设
+        cap-sdio-irq; //此配置标识该 SDIO 外设(通常是 Wifi)是否支持 sdio 中断，如果你的外设是 OOB 中断，请不要加入此项。支持哪种类型的中断请联系 Wifi 原厂确定。
+        keep-power-in-suspend; //此配置表示是否支持睡眠不断电，请默认加入该选项。Wifi 一般都有深度唤醒的要求。
+        mmc-pwrseq = <&sdio_pwrseq>; //此项是 SDIO 外设(一般是 Wifi)的电源控制。为必须项，否则 Wifi 无法上电工作。请参考下面的例子，晶振时钟和复位-使能的 GPIO 的选择按照实际板级硬件要求进行配置。
+        non-removable; //此项表示该插槽为不可移动设备且此项为 SDIO 设备必须添加项。
+        pinctrl-names = "default";
+        pinctrl-0 = <&sdiom0_pins>;
+        sd-uhs-sdr104; //此项配置决定该 SDIO 设备是否支持 SDIO3.0 模式。前提是需要 Wifi 的 IO 电压为 1.8v。同SDMMC配置
+        status = "okay";
 };
