@@ -77,12 +77,23 @@
 		gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_HIGH>;
 	};
 
+        /* HGD-NGD_Vis DEBUG */
+	NGD_HGD_vis_en: HGD-HGD-vis-en {
+		compatible = "regulator-fixed";
+		regulator-name = "HGD-HGD-vis-en";
+		regulator-boot-on;
+		regulator-always-on;
+		enable-active-high;
+		gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
+	};
+
 	/* HGD regulator dummy consumer */
 	dummy_consumer {
 		compatible = "dummy-consumer";
 		status = "okay";
 		vcc3-supply = <&vcc_3v3_en>;
 		vcc1-supply = <&vcc_1v8_en>;
+                debug-supply = <&NGD_HGD_vis_en>;
 	};
 };
 
@@ -146,18 +157,31 @@
         };
 };
 
-// 485
 &uart0 {
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&uart0m2_xfer>;
 };
 
-// 红外机芯
+// 红外机芯 (topeet board, for NGD visible debug)
 &uart7 {
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&uart7m0_xfer>;
+};
+
+// 红外机芯 (HGD board, for NGD visible debug)
+&uart1 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart1m1_xfer>;
+};
+
+// HGD, connect to IR sensor.
+&uart5 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart5m0_xfer>;
 };
 
 &i2c6 {
