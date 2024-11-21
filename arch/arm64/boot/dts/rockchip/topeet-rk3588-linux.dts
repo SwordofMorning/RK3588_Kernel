@@ -57,14 +57,14 @@
         };
     };
 
-	/* HGD 3v3 */
-	vcc_3v3_en: vcc-3v3-en {
+	/* HGD 5V */
+	vcc_5v_en: vcc-5v-en {
 		compatible = "regulator-fixed";
-		regulator-name = "vcc_3v3_en";
+		regulator-name = "vcc_5v_en";
 		regulator-boot-on;
 		regulator-always-on;
 		enable-active-high;
-		gpio = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
+		gpio = <&gpio0 RK_PC4 GPIO_ACTIVE_HIGH>;
 	};
 
 	/* HGD 1v8 */
@@ -77,7 +77,38 @@
 		gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_HIGH>;
 	};
 
-        /* HGD-NGD_Vis DEBUG */
+	/* HGD 3v3 */
+	vcc_3v3_en: vcc-3v3-en {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_3v3_en";
+		regulator-boot-on;
+		regulator-always-on;
+		enable-active-high;
+		gpio = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
+	};
+
+	/* HGD 12V */
+	vcc_12v_en: vcc-12v-en {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_12v_en";
+		regulator-boot-on;
+		regulator-always-on;
+		enable-active-high;
+		gpio = <&gpio0 RK_PD5 GPIO_ACTIVE_HIGH>;
+	};
+
+	/* HGD-NGD_Vis DEBUG */
+	NGD_HGD_vis_en: HGD-HGD-vis-en {
+		compatible = "regulator-fixed";
+		regulator-name = "HGD-HGD-vis-en";
+		regulator-boot-on;
+		regulator-always-on;
+		enable-active-high;
+		gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
+	};
+
+
+	/* HGD-NGD_Vis DEBUG */
 	NGD_HGD_vis_en: HGD-HGD-vis-en {
 		compatible = "regulator-fixed";
 		regulator-name = "HGD-HGD-vis-en";
@@ -91,9 +122,11 @@
 	dummy_consumer {
 		compatible = "dummy-consumer";
 		status = "okay";
-		vcc3-supply = <&vcc_3v3_en>;
+		vcc5-supply = <&vcc_5v_en>;
 		vcc1-supply = <&vcc_1v8_en>;
-                debug-supply = <&NGD_HGD_vis_en>;
+		vcc3-supply = <&vcc_3v3_en>;
+		vcc12-supply = <&vcc_12v_en>;
+		debug-supply = <&NGD_HGD_vis_en>;
 	};
 
         //wifi 
@@ -132,68 +165,6 @@
 	};
 
 };
-
-&i2c6{
-    //RTC实时时钟
-	// hym8563: hym8563@51 {
-	// 	compatible = "haoyu,hym8563";
-	// 	reg = <0x51>;
-	// 	#clock-cells = <0>;
-	// 	clock-frequency = <32768>;
-	// 	clock-output-names = "hym8563";
-	// 	pinctrl-names = "default";
-	// 	pinctrl-0 = <&hym8563_int>;
-	// 	interrupt-parent = <&gpio0>;
-	// 	interrupts = <RK_PB0 IRQ_TYPE_LEVEL_LOW>;
-	// 	wakeup-source;
-	// };   
-};
-
-&i2c7 {
-	status = "okay";
-
-    //es8388声卡
-	// es8388: es8388@11 {
-	// 	status = "okay";
-	// 	#sound-dai-cells = <0>;
-	// 	compatible = "everest,es8388", "everest,es8323";
-	// 	reg = <0x11>;
-	// 	clocks = <&mclkout_i2s0>;
-	// 	clock-names = "mclk";
-	// 	assigned-clocks = <&mclkout_i2s0>;
-	// 	assigned-clock-rates = <12288000>;
-	// 	pinctrl-names = "default";
-	// 	pinctrl-0 = <&i2s0_mclk>;
-	// };
-};
-
-//fan
-// &pwm12 {
-//     status = "okay";
-//     pinctrl-0 = <&pwm12m1_pins>;
-// };
-
-//蜂鸣器
-// &pwm15 {
-//     status = "okay";
-//     pinctrl-0 = <&pwm15m2_pins>;
-// };
-
-//sata硬盘
-// &sata0 {
-// 	status = "okay";
-// };
-
-//nvme固态硬盘
-// &pcie30phy {
-//         rockchip,pcie30-phymode = <PHY_MODE_PCIE_NANBNB>;
-//         status = "okay";
-// };
-
-// &pcie3x4 {
-//         reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
-//         status = "okay";
-// };
 
 //有线网卡配置
 
@@ -242,29 +213,6 @@
        // status = "disable";
 //};
 
-//&mdio0 {
-//        rgmii_phy0: phy@1 {
-//                compatible = "ethernet-phy-ieee802.3-c22";
-//                reg = <0x1>;
-//        };
-//};
-
-//&mdio1 {
-//        rgmii_phy1: phy@1 {
-//                compatible = "ethernet-phy-ieee802.3-c22";
-//                reg = <0x1>;
-//        };
-//};
-
-//can
-// &can1 {
-//         status = "disable";
-//         compatible = "rockchip,can-2.0"; //使用can
-//         pinctrl-0 = <&can1m1_pins>;
-//         assigned-clocks = <&cru CLK_CAN1>;
-//         assigned-clock-rates = <100000000>;
-// };
-
 &uart0 {
         status = "okay";
         pinctrl-names = "default";
@@ -283,6 +231,13 @@
         status = "okay";
         pinctrl-names = "default";
         pinctrl-0 = <&uart1m1_xfer>;
+};
+
+// HGD, connect to IR Motor.
+&uart4 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart4m2_xfer>;
 };
 
 // HGD, connect to IR sensor.
@@ -319,18 +274,6 @@
 			rockchip,pins = <2 RK_PB7 0 &pcfg_pull_down>;	//(XXXX)
 		};
 	};
-
- 	// hym8563 {
-	// 	hym8563_int: hym8563-int {
-	// 		rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
-	// 	};
-	// }; 
-
-	// headphone {
-	// 	hp_det: hp-det {
-	// 		rockchip,pins = <1 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
-	// 	};
-	// };
 
 	// hdmi {
 	//         hdmirx_det: hdmirx-det {
