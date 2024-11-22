@@ -254,7 +254,36 @@
 		#clock-cells = <0>;
 	};
 };
-
+&i2c3 {
+        status = "okay";
+        //i2c-scl-rising-time-ns = <180>;
+    	//i2c-scl-falling-time-ns = <30>;
+    	clock-frequency = <100000>;
+	    // BQ25792 充电芯片 0x6B
+        bq25700: bq25700@6b {
+                compatible = "ti,bq25790";
+                reg = <0x6b>;
+                //extcon = <&fusb0>;
+                interrupt-parent = <&gpio2>;
+                interrupts = <RK_PC4 IRQ_TYPE_LEVEL_LOW>;
+       //         pinctrl-names = "default";
+       //         pinctrl-0 = <&charger_ok_int>;
+       //         ti,charge-current = <1500000>;
+       //         ti,max-charge-voltage = <8704000>;
+       //         ti,max-input-voltage = <20000000>;
+       //         ti,max-input-current = <6000000>;
+       //         ti,input-current-sdp = <500000>;
+       //         ti,input-current-dcp = <2000000>;
+        //        ti,input-current-cdp = <2000000>;
+        //        ti,input-current-dc = <2000000>;
+         //       ti,minimum-sys-voltage = <6700000>;
+         //       ti,otg-voltage = <5000000>;
+          //      ti,otg-current = <500000>;
+          //      ti,input-current = <500000>;
+          //      pd-charge-only = <0>;
+                status = "okay";
+    };
+};
 &pinctrl {
 	/* WIFI_REG_ON脚的pinctrl的配置 */
 	sdio-pwrseq {
