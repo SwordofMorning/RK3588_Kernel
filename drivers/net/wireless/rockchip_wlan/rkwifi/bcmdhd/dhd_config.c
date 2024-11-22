@@ -1340,6 +1340,8 @@ dhd_conf_set_path_params(dhd_pub_t *dhd, char *fw_path, char *nv_path)
 #endif
 
 #ifdef DHD_LINUX_STD_FW_API
+
+	SDFSDFSDFSDF
 	memset(path, 0, sizeof(path));
 	path_len = dhd_conf_get_fw_path(path, sizeof(path));
 	snprintf(path+path_len, WLC_IOCTL_SMLEN, "%s", fw_path);
@@ -1351,6 +1353,7 @@ dhd_conf_set_path_params(dhd_pub_t *dhd, char *fw_path, char *nv_path)
 	snprintf(path+path_len, WLC_IOCTL_SMLEN, "%s", dhd->conf_path);
 	CONFIG_MSG("Final conf_path=%s\n", path);
 #else
+	
 	CONFIG_MSG("Final fw_path=%s\n", fw_path);
 	CONFIG_MSG("Final nv_path=%s\n", nv_path);
 	CONFIG_MSG("Final clm_path=%s\n", dhd->clm_path);
