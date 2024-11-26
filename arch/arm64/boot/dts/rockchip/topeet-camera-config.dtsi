@@ -1,31 +1,21 @@
-&pinctrl {
-	cam {
-		vis_reset: vis-reset {
-			rockchip,pins =
-			/* camera power en */
-			<3 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>;
-		};
-	};
-};
-
 &csi2_dphy1_hw {
 	status = "okay";
 };
 
-&i2c6 {
+&i2c4 {
 	status = "okay";
-	pinctrl-0 = <&i2c6m0_xfer>;
+	pinctrl-0 = <&i2c4m1_xfer>;
 
-	jp_ngd_vis: jp_ngd_vis@10 {
+	imx335: imx335@1a {
 		status = "okay";
-		compatible = "jpvision,jp_ngd_vis";
-		reg = <0x10>;
+		compatible = "sony,imx335";
+		reg = <0x1a>;
 		clocks = <&cru CLK_MIPI_CAMARAOUT_M4>;
 		clock-names = "xvclk";
 		power-domains = <&power RK3588_PD_VI>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&mipim0_camera4_clk &vis_reset>;
-		reset-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&mipim0_camera4_clk>;
+		reset-gpios = <&gpio1 RK_PD3 GPIO_ACTIVE_LOW>;
 		rockchip,camera-module-index = <3>;
 		rockchip,camera-module-facing = "back";
 		rockchip,camera-module-name = "default";
