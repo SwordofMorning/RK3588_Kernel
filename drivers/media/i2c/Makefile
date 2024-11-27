@@ -253,3 +253,5 @@ obj-$(CONFIG_VIDEO_PREISP_DUMMY_SENSOR) += preisp-dummy.o
 obj-$(CONFIG_VIDEO_ROCKCHIP_THUNDER_BOOT_ISP)	+= cam-tb-setup.o
 obj-$(CONFIG_VIDEO_CAM_SLEEP_WAKEUP)	+= cam-sleep-wakeup.o
 obj-$(CONFIG_VIDEO_JP_NGD_VIS)	+= jp_ngd_vis.o
+obj-$(CONFIG_VIDEO_GZ039PBC03)	+= GZ039PBC03.o
+obj-$(CONFIG_VIDEO_GZ039PBC03)	+= lt9211c/
