@@ -2604,6 +2604,19 @@ config VIDEO_JP_NGD_VIS
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called JP_NGD_VIS.
+
+config VIDEO_GZ039PBC03
+	tristate "Jpvision NGD Vis Camera"
+	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
+	depends on MEDIA_CAMERA_SUPPORT
+	select GZ039PBC03
+	default y
+	help
+	  This is a Video4Linux2 sensor driver for the Jpvision
+	  NGD vis camera.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called GZ039PBC03.
 endmenu
 
 endif # VIDEO_V4L2
