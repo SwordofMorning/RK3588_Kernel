@@ -107,17 +107,6 @@
 		gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
 	};
 
-
-	/* HGD OLED enable */
-	HGD_OLEN_en: HGD-OLEN-en {
-		compatible = "regulator-fixed";
-		regulator-name = "HGD-OLEN-en";
-		regulator-boot-on;
-		regulator-always-on;
-		enable-active-high;
-		gpio = <&gpio2 RK_PC3 GPIO_ACTIVE_HIGH>;
-	};
-
 	/* HGD regulator dummy consumer */
 	dummy_consumer {
 		compatible = "dummy-consumer";
@@ -127,7 +116,6 @@
 		vcc3-supply = <&vcc_3v3_en>;
 		vcc12-supply = <&vcc_12v_en>;
 		debug-supply = <&NGD_HGD_vis_en>;
-		oled-supply = <&HGD_OLEN_en>;
 	};
 
         //wifi 

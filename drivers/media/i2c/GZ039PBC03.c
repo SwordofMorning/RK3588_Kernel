@@ -92,6 +92,20 @@ static void gz039pbc03_power_off(struct device *dev)
     	}
 }
 
+static ssize_t reinit_store(struct device *dev,
+                           struct device_attribute *attr,
+                           const char *buf, size_t count)
+{
+    struct i2c_client *client = to_i2c_client(dev);
+    
+    // 重新执行初始化序列
+    gz039pbc03_system_init(client);
+    
+    return count;
+}
+
+static DEVICE_ATTR_WO(reinit);
+
 static int gz039pbc03_probe(struct i2c_client *client,
                           const struct i2c_device_id *id)
 {
@@ -136,6 +150,8 @@ static int gz039pbc03_probe(struct i2c_client *client,
     gz039pbc03_system_init(client);
 
     dev_info(dev, "gz039pbc03 device at address 0x%02x has been initialized\n", client->addr);
+
+    device_create_file(&client->dev, &dev_attr_reinit);
 
     return 0;
 }
