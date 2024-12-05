@@ -420,6 +420,7 @@ Input:
 Output:
     None.
 *********************************************************/
+#if 0
 static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
 {
 	if (gtp_change_x2y)
@@ -453,6 +454,48 @@ static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
 
     GTP_DEBUG("ID:%d, X:%d, Y:%d, W:%d", id, x, y, w);
 }
+#endif
+// HGD Begin
+static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
+{
+    // 首先交换x和y
+    s32 temp_x = x;
+    s32 temp_y = y;
+
+    // 处理270度旋转
+    if (gtp_change_x2y) {
+        x = temp_y;
+        y = ts->abs_x_max - temp_x;
+    }
+
+    // 处理坐标翻转
+    if (gtp_x_reverse) {
+        x = ts->abs_x_max - x;
+    }
+    if (gtp_y_reverse) {
+        y = ts->abs_y_max - y;
+    }
+
+#if GTP_ICS_SLOT_REPORT
+    input_mt_slot(ts->input_dev, id);
+    input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
+    input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+    input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+    input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
+    input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
+#else
+    input_report_key(ts->input_dev, BTN_TOUCH, 1);
+    input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+    input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+    input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
+    input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
+    input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
+    input_mt_sync(ts->input_dev);
+#endif
+
+    GTP_DEBUG("ID:%d, X:%d, Y:%d, W:%d", id, x, y, w);
+}
+// HGD End
 
 /*******************************************************
 Function:
@@ -2810,6 +2853,20 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
         //ts->abs_y_max = GTP_MAX_HEIGHT;
         ts->int_trigger_type = GTP_INT_TRIGGER;
     }
+
+// HGD Begin
+
+    gtp_change_x2y = false; // 启用x、y交换
+    gtp_x_reverse = true;   // 根据需要设置x轴翻转
+    gtp_y_reverse = true;   // 根据需要设置y轴翻转
+
+    if (gtp_change_x2y) {
+        s32 temp = ts->abs_x_max;
+        ts->abs_x_max = ts->abs_y_max;
+        ts->abs_y_max = temp;
+    }
+
+// HGD End
     
     ts->irq_flags = ts->int_trigger_type ? IRQF_TRIGGER_FALLING : IRQF_TRIGGER_RISING;
     
