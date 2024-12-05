@@ -98,14 +98,14 @@
 	};
 
 	/* HGD-NGD_Vis DEBUG */
-	NGD_HGD_vis_en: HGD-HGD-vis-en {
-		compatible = "regulator-fixed";
-		regulator-name = "HGD-HGD-vis-en";
-		regulator-boot-on;
-		regulator-always-on;
-		enable-active-high;
-		gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
-	};
+	// NGD_HGD_vis_en: HGD-HGD-vis-en {
+	// 	compatible = "regulator-fixed";
+	// 	regulator-name = "HGD-HGD-vis-en";
+	// 	regulator-boot-on;
+	// 	regulator-always-on;
+	// 	enable-active-high;
+	// 	gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
+	// };
 
 	/* HGD regulator dummy consumer */
 	dummy_consumer {
@@ -115,7 +115,7 @@
 		vcc1-supply = <&vcc_1v8_en>;
 		vcc3-supply = <&vcc_3v3_en>;
 		vcc12-supply = <&vcc_12v_en>;
-		debug-supply = <&NGD_HGD_vis_en>;
+		// debug-supply = <&NGD_HGD_vis_en>;
 	};
 
         //wifi 
@@ -282,36 +282,7 @@
 		#clock-cells = <0>;
 	};
 };
-&i2c3 {
-        status = "okay";
-        //i2c-scl-rising-time-ns = <180>;
-    	//i2c-scl-falling-time-ns = <30>;
-    	clock-frequency = <100000>;
-	    // BQ25792 充电芯片 0x6B
-        bq25700: bq25700@6b {
-                compatible = "ti,bq25790";
-                reg = <0x6b>;
-                //extcon = <&fusb0>;
-                interrupt-parent = <&gpio2>;
-                interrupts = <RK_PC4 IRQ_TYPE_LEVEL_LOW>;
-       //         pinctrl-names = "default";
-       //         pinctrl-0 = <&charger_ok_int>;
-       //         ti,charge-current = <1500000>;
-       //         ti,max-charge-voltage = <8704000>;
-       //         ti,max-input-voltage = <20000000>;
-       //         ti,max-input-current = <6000000>;
-       //         ti,input-current-sdp = <500000>;
-       //         ti,input-current-dcp = <2000000>;
-        //        ti,input-current-cdp = <2000000>;
-        //        ti,input-current-dc = <2000000>;
-         //       ti,minimum-sys-voltage = <6700000>;
-         //       ti,otg-voltage = <5000000>;
-          //      ti,otg-current = <500000>;
-          //      ti,input-current = <500000>;
-          //      pd-charge-only = <0>;
-                status = "okay";
-    };
-};
+
 &pinctrl {
 	/* WIFI_REG_ON脚的pinctrl的配置 */
 	sdio-pwrseq {
@@ -331,12 +302,6 @@
 			rockchip,pins = <2 RK_PB7 0 &pcfg_pull_down>;	//(XXXX)
 		};
 	};
-
-	// hdmi {
-	//         hdmirx_det: hdmirx-det {
-	//                 rockchip,pins = <1 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>;
-	//         };
-	// };
 };
 
 &sdio {
@@ -377,6 +342,28 @@
 	// };
 };
 
+&i2c2 {
+	status = "okay";
+	pinctrl-0 = <&i2c2m4_xfer>;
+
+	gt9xx: gt9xx@5d {
+		compatible = "goodix,gt9xx";
+		reg = <0x5d>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <RK_PC0 IRQ_TYPE_LEVEL_LOW>;
+		reset-gpio = <&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
+		touch-gpio = <&gpio3 RK_PC0 IRQ_TYPE_EDGE_RISING>;
+		max-x = <1920>;
+		max-y = <1080>;
+        tp-size = <911>;
+		status = "okay";
+	};
+};
+
+/* ========================================================================================== */
+/* ======================================== DSI1 EVF ======================================== */
+/* ========================================================================================== */
+
 &dsi1 {
 	status = "okay";
 	//rockchip,lane-rate = <1000>;
@@ -390,12 +377,15 @@
 		prepare-delay-ms = <6>;
 		unprepare-delay-ms = <0>;
 		disable-delay-ms = <20>;
+
 		dsi,flags = <(MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST | MIPI_DSI_MODE_LPM | MIPI_DSI_MODE_EOT_PACKET)>;
 		dsi,format = <MIPI_DSI_FMT_RGB888>;
 		dsi,lanes  = <4>;
 		dsi,channel = <0>;
+
 		size,width = <120>;
 		size,height = <170>;
+
 		panel-init-sequence = [
 		];
 
@@ -461,10 +451,6 @@
 	connect = <&vp3_out_dsi1>;
 };
 
-/*
- * mipi_dcphy1 needs to be enabled
- * when dsi0 is enabled
- */
 &dsi1_in_vp3 {
 	status = "okay";
 };
@@ -476,6 +462,10 @@
 &mipi_dcphy1 {
 	status = "okay";
 };
+
+/* ====================================================================================== */
+/* ======================================== HDMI ======================================== */
+/* ====================================================================================== */
 
 &hdptxphy_hdmi0 {
 	status = "okay";
@@ -495,5 +485,123 @@
 };
 
 &route_hdmi0 {
+	status = "okay";
+};
+
+/* ============================================================================================ */
+/* ======================================== DSI0 Panel ======================================== */
+/* ============================================================================================ */
+
+&dsi0 {
+	status = "okay";
+
+	dsi0_panel: panel@0 {
+		status = "okay";
+		compatible = "simple-panel-dsi";
+		reg = <0>;
+		backlight = <&backlight>;
+
+		prepare-delay-ms = <60>;
+        enable-delay-ms = <60>;
+		reset-delay-ms = <80>;
+		init-delay-ms = <80>;
+		disable-delay-ms = <60>;
+		unprepare-delay-ms = <60>;
+
+		dsi,flags = <(MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST | MIPI_DSI_MODE_LPM | MIPI_DSI_MODE_EOT_PACKET)>;
+		dsi,format = <MIPI_DSI_FMT_RGB888>;
+		dsi,lanes  = <4>;
+		dsi,channel = <0>;
+
+		size,width = <120>;
+		size,height = <170>;
+
+		reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_LOW>;
+
+		panel-init-sequence = [
+			39 00 04 B9 FF 83 99
+			15 00 02 D2 77
+			39 00 10 B1 02 04 74 94 01 32 33 11 11 AB 4D 56 73 02 02
+			39 00 10 B2 00 80 80 AE 05 07 5A 11 00 00 10 1E 70 03 D4
+			39 00 2D B4 00 FF 02 C0 02 C0 00 00 08 00 04 06 00 32 04 0A 08 21 03 01 00 0F B8 8B 02 C0 02 C0 00 00 08 00 04 06 00 32 04 0A 08 01 00 0F B8 01
+			39 0A 22 D3 00 00 00 00 00 00 06 00 00 10 04 00 04 00 00 00 00 00 00 00 00 00 00 01 00 05 05 07 00 00 00 05 40
+			39 0A 21 D5 18 18 19 19 18 18 21 20 01 00 07 06 05 04 03 02 18 18 18 18 18 18 2F 2F 30 30 31 31 18 18 18 18
+			39 0A 21 D6 18 18 19 19 40 40 20 21 06 07 00 01 02 03 04 05 40 40 40 40 40 40 2F 2F 30 30 31 31 40 40 40 40
+			39 00 11 D8 A2 AA 02 A0 A2 A8 02 A0 B0 00 00 00 B0 00 00 00
+			15 00 02 BD 01
+			39 00 11 D8 B0 00 00 00 B0 00 00 00 E2 AA 03 F0 E2 AA 03 F0
+			15 00 02 BD 02
+			39 00 09 D8 E2 AA 03 F0 E2 AA 03 F0
+			15 00 02 BD 00
+			39 00 03 B6 8D 8D
+			39 0A 37 E0 00 0E 19 13 2E 39 48 44 4D 57 5F 66 6C 76 7F 85 8A 95 9A A4 9B AB B0 5C 58 64 77 00 0E 19 13 2E 39 48 44 4D 57 5F 66 6C 76 7F 85 8A 95 9A A4 9B AB B0 5C 58 64 77
+			15 00 02 CC 08
+			05 78 01 11
+			05 14 01 29
+		];
+
+		panel-exit-sequence = [
+		];
+
+		disp_timings0: display-timings {
+			native-mode = <&dsi0_timing0>;
+			dsi0_timing0: timing0 {
+                clock-frequency = <136000000>;
+                hactive = <1080>;
+                vactive = <1920>;
+                hfront-porch = <45>;
+                hsync-len = <45>;
+                hback-porch = <5>;
+                vfront-porch = <9>;
+                vsync-len = <4>;
+                vback-porch = <3>;
+                hsync-active = <0>;
+                vsync-active = <0>;
+                de-active = <0>;
+                pixelclk-active = <0>;
+			};
+		};
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				panel_in_dsi: endpoint {
+					remote-endpoint = <&dsi_out_panel>;
+				};
+			};
+		};
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@1 {
+			reg = <1>;
+			dsi_out_panel: endpoint {
+				remote-endpoint = <&panel_in_dsi>;
+			};
+		};
+	};
+
+};
+
+&route_dsi0 {
+	status = "okay";
+	connect = <&vp2_out_dsi0>;
+};
+
+&dsi0_in_vp2 {
+	status = "okay";
+};
+
+&dsi0_in_vp3 {
+	status = "disabled";
+};
+
+&mipi_dcphy0 {
 	status = "okay";
 };
