@@ -9,22 +9,6 @@
 	model = "TOPEET RK3588 LP4 LP5 Board";
 	compatible = "rockchip,rk3588-evb3-lp5-v10", "rockchip,rk3588";
 
-        /* If hdmirx node is disabled, delete the reserved-memory node here. */
-        reserved-memory {
-                #address-cells = <2>;
-                #size-cells = <2>;
-                ranges;
-
-                /* Reserve 128MB memory for hdmirx-controller@fdee0000 */
-                cma {
-                        compatible = "shared-dma-pool";
-                        reusable;
-                        reg = <0x0 (256 * 0x100000) 0x0 (128 * 0x100000)>;
-                        linux,cma-default;
-                };
-        };
-
-    //ADC按键
     adc_keys: adc-keys {
         compatible = "adc-keys";
         io-channels = <&saradc 1>;
@@ -32,30 +16,94 @@
         keyup-threshold-microvolt = <1800000>;
         poll-interval = <100>;
 
-        vol-up-key {
-            label = "volume up";
-            linux,code = <KEY_VOLUMEUP>;
-            press-threshold-microvolt = <17000>;
+        KEY_F1 {
+            label = "KEY_F1";
+            linux,code = <KEY_F1>;
+			press-threshold-microvolt = <18000>;
         };
 
-        vol-down-key {
-            label = "volume down";
-            linux,code = <KEY_VOLUMEDOWN>;
-            press-threshold-microvolt = <417000>;
+		KEY_F2 {
+            label = "KEY_F2";
+            linux,code = <KEY_F2>;
+			press-threshold-microvolt = <600000>;
         };
 
-        menu-key {
-            label = "menu";
-            linux,code = <KEY_MENU>;
-            press-threshold-microvolt = <890000>;
-        };
-
-        back-key {
-            label = "back";
-            linux,code = <KEY_BACK>;
-            press-threshold-microvolt = <1235000>;
+		KEY_F3 {
+            label = "KEY_F3";
+            linux,code = <KEY_F3>;
+			press-threshold-microvolt = <1000000>;
         };
     };
+
+	gpio_keys: gpio-keys {
+		compatible = "gpio-keys";
+
+		KEY_F4 {
+            label = "KEY_F4";
+            gpios = <&gpio1 RK_PC3 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_F4>;
+        };
+
+		KEY_F5 {
+            label = "KEY_F5";
+            gpios = <&gpio1 RK_PC5 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_F5>;
+        };
+
+		KEY_C {
+            label = "KEY_C";
+            gpios = <&gpio1 RK_PA2 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_0>;
+        };
+
+		KEY_S {
+            label = "KEY_C";
+            gpios = <&gpio2 RK_PC0 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_1>;
+        };
+
+		KEY_A {
+            label = "KEY_A";
+            gpios = <&gpio1 RK_PD2 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_2>;
+        };
+
+		KEY_UP {
+            label = "KEY_UP";
+            gpios = <&gpio2 RK_PC5 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_3>;
+        };
+
+		KEY_LEFT {
+            label = "KEY_LEFT";
+            gpios = <&gpio4 RK_PC6 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_4>;
+        };
+
+		KEY_RIGHT {
+            label = "KEY_RIGHT";
+            gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_5>;
+        };
+
+		KEY_DOWN {
+            label = "KEY_DOWN";
+            gpios = <&gpio2 RK_PC2 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_6>;
+        };
+
+		KEY_ENTER {
+            label = "KEY_ENTER";
+            gpios = <&gpio1 RK_PB1 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_7>;
+        };
+
+		KEY_VIDEO {
+            label = "KEY_VIDEO";
+            gpios = <&gpio1 RK_PA7 GPIO_ACTIVE_LOW>;
+            linux,code = <KEY_8>;
+        };
+	};
 
 	/* HGD 5V */
 	vcc_5v_en: vcc-5v-en {
