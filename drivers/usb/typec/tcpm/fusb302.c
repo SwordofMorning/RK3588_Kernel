@@ -118,6 +118,8 @@ struct fusb302_chip {
 	int logbuffer_tail;
 	u8 *logbuffer[LOG_BUFFER_ENTRIES];
 #endif
+	struct power_supply *psy;
+	struct power_supply *battery_psy;
 };
 
 /*
@@ -439,6 +441,41 @@ static int tcpm_get_vbus(struct tcpc_dev *dev)
 	mutex_unlock(&chip->lock);
 
 	return ret;
+}
+#include <linux/power_supply.h>
+static int tcpm_set_current_limit(struct tcpc_dev *dev, u32 max_ma, u32 mv)
+{
+	struct fusb302_chip *chip = container_of(dev, struct fusb302_chip,
+						 tcpc_dev);
+	union power_supply_propval value;
+	int ret = 0;
+	max_ma*=1000;
+	mv*=1000;
+
+
+	//if(max_ma > 1000000) max_ma = 1000000;
+	value.intval = max_ma;
+     
+
+	//ret = power_supply_set_property(chip->psy, POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT, &value);
+    
+
+	// if (ret < 0) {
+      //  pr_err("====Failed to set input current limit %d %d=== ret = %d\n",max_ma,mv,ret);
+        //return ret;
+    //}
+
+    ret = power_supply_set_property(chip->battery_psy, POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT, &value);
+	
+	if (ret < 0) 
+	{
+        pr_err("====Failed to set battery_psy  current limit %d %d=== ret = %d\n",max_ma,mv,ret);
+        return ret;
+    }
+
+    pr_info("Successfully set input battery_psy current limit to %d\n", max_ma);
+
+    return 0;
 }
 
 static int tcpm_get_current_limit(struct tcpc_dev *dev)
@@ -1128,6 +1165,7 @@ static void init_tcpc_dev(struct tcpc_dev *fusb302_tcpc_dev)
 	fusb302_tcpc_dev->init = tcpm_init;
 	fusb302_tcpc_dev->get_vbus = tcpm_get_vbus;
 	fusb302_tcpc_dev->get_current_limit = tcpm_get_current_limit;
+	fusb302_tcpc_dev->set_current_limit = tcpm_set_current_limit;
 	fusb302_tcpc_dev->set_cc = tcpm_set_cc;
 	fusb302_tcpc_dev->get_cc = tcpm_get_cc;
 	fusb302_tcpc_dev->set_polarity = tcpm_set_polarity;
@@ -1694,6 +1732,9 @@ static int fusb302_probe(struct i2c_client *client,
 	const char *name;
 	int ret = 0;
 
+    printk("======================fusb302_probe========================\n");
+
+
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_I2C_BLOCK)) {
 		dev_err(&client->dev,
 			"I2C/SMBus block functionality not supported!\n");
@@ -1714,12 +1755,33 @@ static int fusb302_probe(struct i2c_client *client,
 	 * to be set by the platform code which also registers the i2c client
 	 * for the fusb302.
 	 */
+
 	if (device_property_read_string(dev, "linux,extcon-name", &name) == 0) {
 		chip->extcon = extcon_get_extcon_dev(name);
 		if (!chip->extcon)
 			return -EPROBE_DEFER;
 	}
 
+	chip->psy = power_supply_get_by_name("bq25790-charger");
+
+	if (!chip->psy) {
+    	printk("=====Failed to get bq25790-charger power supply====\n");
+    	return -ENODEV;
+	}
+    else{
+		  printk("=====get bq25790-charger power supply ok ====\n");
+	}
+	///////////////////////////////////////////////////////////////
+	chip->battery_psy = power_supply_get_by_name("bq25790-battery");
+
+	if (!chip->battery_psy) {
+    	printk("=====Failed to get bq25790-battery power supply====\n");
+    	return -ENODEV;
+	}
+    else{
+		  printk("=====get bq25790-battery power supply ok ====\n");
+	}
+	
 	chip->vbus = devm_regulator_get(chip->dev, "vbus");
 	if (IS_ERR(chip->vbus))
 		return PTR_ERR(chip->vbus);
@@ -1795,6 +1857,10 @@ static int fusb302_remove(struct i2c_client *client)
 	tcpm_unregister_port(chip->tcpm_port);
 	fwnode_handle_put(chip->tcpc_dev.fwnode);
 	destroy_workqueue(chip->wq);
+    if(chip->psy)
+    power_supply_put(chip->psy);
+    if(chip->battery_psy)
+	 power_supply_put(chip->battery_psy);
 	fusb302_debugfs_exit(chip);
 
 	return 0;
@@ -1870,6 +1936,6 @@ static struct i2c_driver fusb302_driver = {
 };
 module_i2c_driver(fusb302_driver);
 
-MODULE_AUTHOR("Yueyao Zhu <yueyao.zhu@gmail.com>");
+MODULE_AUTHOR("jjs<jjs.j@gmail.com>");
 MODULE_DESCRIPTION("Fairchild FUSB302 Type-C Chip Driver");
 MODULE_LICENSE("GPL");

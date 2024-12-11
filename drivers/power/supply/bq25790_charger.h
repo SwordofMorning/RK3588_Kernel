@@ -4,9 +4,10 @@
 
 #ifndef _BQ25790_CHARGER_H
 #define _BQ25790_CHARGER_H
+#include <linux/i2c.h>
 
 #define BQ25790_MANUFACTURER	"Texas Instruments"
-#define BQ25790_NAME		"bq25790"
+#define BQ25790_NAME		"bq25792"
 
 #define BQ25790_MIN_SYS_V	0x00
 #define BQ25790_CHRG_V_LIM_MSB	0x01
@@ -123,11 +124,11 @@
 #define BQ25790_ICHRG_CURRENT_STEP_uA		10000
 #define BQ25790_ICHRG_I_MIN_uA			50000
 #define BQ25790_ICHRG_I_MAX_uA			5000000
-#define BQ25790_ICHRG_I_DEF_uA			1000000
+#define BQ25790_ICHRG_I_DEF_uA			3000000
 
 #define BQ25790_VREG_V_MAX_uV	18800000
 #define BQ25790_VREG_V_MIN_uV	3000000
-#define BQ25790_VREG_V_DEF_uV	3600000
+#define BQ25790_VREG_V_DEF_uV	16800000
 #define BQ25790_VREG_V_STEP_uV	10000
 
 #define BQ25790_IINDPM_I_MIN_uA	100000
@@ -146,5 +147,53 @@
 #define BQ25790_WATCHDOG_MASK	GENMASK(2, 0)
 #define BQ25790_WATCHDOG_DIS	0
 #define BQ25790_WATCHDOG_MAX	160000
+
+struct bq25790_init_data {
+	u32 ichg;	/* charge current		*/
+	u32 ilim;	/* input current		*/
+	u32 vreg;	/* regulation voltage		*/
+	u32 iterm;	/* termination current		*/
+	u32 iprechg;	/* precharge current		*/
+	u32 vlim;	/* minimum system voltage limit */
+	u32 max_ichg;
+	u32 max_vreg;
+};
+
+struct bq25790_state {
+	bool online;
+	u8 chrg_status;
+	u8 chrg_type;
+	u8 health;
+	u8 chrg_fault;
+	u8 vbus_status;
+	u8 fault_0;
+	u8 fault_1;
+	u32 vbat_adc;
+	u32 vbus_adc;
+	u32 ibus_adc;
+	u32 ibat_adc;
+};
+
+struct bq25790_device {
+	struct i2c_client *client;
+	struct device *dev;
+	struct power_supply *charger;
+	struct power_supply *battery;
+	struct mutex lock;
+
+	struct usb_phy *usb2_phy;
+	struct usb_phy *usb3_phy;
+	struct notifier_block usb_nb;
+	struct work_struct usb_work;
+	unsigned long usb_event;
+	struct regmap *regmap;
+
+	char model_name[I2C_NAME_SIZE];
+	int device_id;
+
+	struct bq25790_init_data init_data;
+	struct bq25790_state state;
+	u32 watchdog_timer;
+};
 
 #endif /* _BQ25790_CHARGER_H */
