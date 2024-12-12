@@ -239,6 +239,13 @@
         pinctrl-0 = <&uart0m2_xfer>;
 };
 
+// HGD,
+&uart7 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m2_xfer>;
+};
+
 // 红外机芯 (topeet board, for NGD visible debug)
 // @note Conflict with i2c4_m1
 // &uart7 {
@@ -357,10 +364,10 @@
 		interrupts = <RK_PC0 IRQ_TYPE_LEVEL_LOW>;
 		reset-gpio = <&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
 		touch-gpio = <&gpio3 RK_PC0 IRQ_TYPE_EDGE_RISING>;
+		status = "okay";
+		tp-size = <911>;
 		max-x = <1920>;
 		max-y = <1080>;
-        tp-size = <911>;
-		status = "okay";
 	};
 };
 

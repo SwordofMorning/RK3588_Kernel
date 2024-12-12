@@ -22,7 +22,7 @@
 u8 gtp_dat_gt11[] = {
 	/* <1200, 1920>*/
 	// #include "WGJ89006B_GT911_Config_20140625_085816_0X43.cfg"
-	#include "5_5_inch.cfg"
+	#include "GT911_Config_20171115_141041-HKD156_1080_1920_v71.cfg"
 };
 
 u8 gtp_dat_gt9110[] = {
