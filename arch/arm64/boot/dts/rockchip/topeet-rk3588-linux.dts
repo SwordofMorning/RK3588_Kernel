@@ -294,6 +294,13 @@
         pinctrl-0 = <&uart0m2_xfer>;
 };
 
+// HGD,
+&uart7 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m2_xfer>;
+};
+
 // 红外机芯 (topeet board, for NGD visible debug)
 // @note Conflict with i2c4_m1
 // &uart7 {
