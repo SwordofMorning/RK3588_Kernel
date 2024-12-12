@@ -3443,7 +3443,9 @@ static int tcpm_pd_send_request(struct tcpm_port *port)
 				  port->negotiated_rev,
 				  port->message_id, 1);
 	msg.payload[0] = cpu_to_le32(rdo);
-
+    port->tcpc->set_current_limit(port->tcpc,port->req_current_limit,port->req_supply_voltage);
+    //printk("========tcpm_pd_transmit  ma %d mv %d=======\n",port->req_current_limit,port->req_supply_voltage);
+	
 	return tcpm_pd_transmit(port, TCPC_TX_SOP, &msg);
 }
 

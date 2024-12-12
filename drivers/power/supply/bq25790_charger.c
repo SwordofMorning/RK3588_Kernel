@@ -3,7 +3,7 @@
 // Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com/
 
 #include <linux/module.h>
-#include <linux/i2c.h>
+
 #include <linux/power_supply.h>
 #include <linux/regmap.h>
 #include <linux/types.h>
@@ -18,58 +18,12 @@
 
 #define BQ25790_NUM_WD_VAL	8
 
-struct bq25790_init_data {
-	u32 ichg;	/* charge current		*/
-	u32 ilim;	/* input current		*/
-	u32 vreg;	/* regulation voltage		*/
-	u32 iterm;	/* termination current		*/
-	u32 iprechg;	/* precharge current		*/
-	u32 vlim;	/* minimum system voltage limit */
-	u32 max_ichg;
-	u32 max_vreg;
-};
 
-struct bq25790_state {
-	bool online;
-	u8 chrg_status;
-	u8 chrg_type;
-	u8 health;
-	u8 chrg_fault;
-	u8 vbus_status;
-	u8 fault_0;
-	u8 fault_1;
-	u32 vbat_adc;
-	u32 vbus_adc;
-	u32 ibus_adc;
-	u32 ibat_adc;
-};
-
-struct bq25790_device {
-	struct i2c_client *client;
-	struct device *dev;
-	struct power_supply *charger;
-	struct power_supply *battery;
-	struct mutex lock;
-
-	struct usb_phy *usb2_phy;
-	struct usb_phy *usb3_phy;
-	struct notifier_block usb_nb;
-	struct work_struct usb_work;
-	unsigned long usb_event;
-	struct regmap *regmap;
-
-	char model_name[I2C_NAME_SIZE];
-	int device_id;
-
-	struct bq25790_init_data init_data;
-	struct bq25790_state state;
-	u32 watchdog_timer;
-};
 
 static struct reg_default bq25790_reg_defs[] = {
-	{BQ25790_INPUT_V_LIM, 0x24},
+	{BQ25790_INPUT_V_LIM, 0x24},//3600mV
 	{BQ25790_INPUT_I_LIM_MSB, 0x01},
-	{BQ25790_INPUT_I_LIM_LSB, 0x2c},
+	{BQ25790_INPUT_I_LIM_LSB, 0x2c},//3000mA
 	{BQ25790_PRECHRG_CTRL, 0xc3},
 	{BQ25790_TERM_CTRL, 0x5},
 	{BQ25790_VOTG_REG, 0xdc},
@@ -137,6 +91,162 @@ static enum power_supply_usb_type bq25790_usb_type[] = {
 	POWER_SUPPLY_USB_TYPE_UNKNOWN,
 };
 
+//debug ======================
+struct bq25790_reg {
+	const char *name;
+	uint8_t reg;
+	int writeable;
+} bq25790_regs[] = {
+	{ "MIN_SYS_V", BQ25790_MIN_SYS_V, 1 },
+	{ "V_LIM_MSB", BQ25790_CHRG_V_LIM_MSB, 1 },
+	{ "V_LIM_LSB", BQ25790_CHRG_V_LIM_LSB, 1 },
+	{ "I_LIM_MSB", BQ25790_CHRG_I_LIM_MSB, 1 },
+	{ "I_LIM_LSB", BQ25790_CHRG_I_LIM_LSB, 1 },
+	{ "V_LIM_INPUT", BQ25790_INPUT_V_LIM, 1 },
+	{ "I_LIM_INPUT_MSB", BQ25790_INPUT_I_LIM_MSB, 1 },
+	{ "I_LIM_INPUT_LSB", BQ25790_INPUT_I_LIM_LSB, 1 },
+	{ "PRECHG_CTRL", BQ25790_PRECHRG_CTRL, 1 },
+	{ "TERM_CTRL", BQ25790_TERM_CTRL, 1 },
+	{ "RECHRG_CTRL", BQ25790_RECHRG_CTRL, 1 },
+	{ "VOTG_REG", BQ25790_VOTG_REG, 1 },
+	{ "IOTG_REG", BQ25790_IOTG_REG, 1 },
+	{ "TIMER_CTRL", BQ25790_TIMER_CTRL, 1 },
+	{ "CHRG_CTRL_0", BQ25790_CHRG_CTRL_0, 1 },
+	{ "CHRG_CTRL_1", BQ25790_CHRG_CTRL_1, 1 },
+	{ "CHRG_CTRL_2", BQ25790_CHRG_CTRL_2, 1 },
+	{ "CHRG_CTRL_3", BQ25790_CHRG_CTRL_3, 1 },
+	{ "CHRG_CTRL_4", BQ25790_CHRG_CTRL_4, 1 },
+	{ "CHRG_CTRL_5", BQ25790_CHRG_CTRL_5, 1 },
+	{ "MPPT_CTRL", BQ25790_MPPT_CTRL, 1 },
+	{ "TEMP_CTRL", BQ25790_TEMP_CTRL, 1 },
+	{ "NTC_CTRL_0", BQ25790_NTC_CTRL_0, 1 },
+	{ "NTC_CTRL_1", BQ25790_NTC_CTRL_1, 1 },
+	{ "ICO_I_LIM", BQ25790_ICO_I_LIM, 1 },
+	{ "CHRG_STAT_0", BQ25790_CHRG_STAT_0, 0 },
+	{ "CHRG_STAT_1", BQ25790_CHRG_STAT_1, 0 },
+	{ "CHRG_STAT_2", BQ25790_CHRG_STAT_2, 0 },
+	{ "CHRG_STAT_3", BQ25790_CHRG_STAT_3, 0 },
+	{ "CHRG_STAT_4", BQ25790_CHRG_STAT_4, 0 },
+	{ "FAULT_STAT_0", BQ25790_FAULT_STAT_0, 0 },
+	{ "FAULT_STAT_1", BQ25790_FAULT_STAT_1, 0 },
+	{ "CHRG_FLAG_0", BQ25790_CHRG_FLAG_0, 0 },
+	{ "CHRG_FLAG_1", BQ25790_CHRG_FLAG_1, 0 },
+	{ "CHRG_FLAG_2", BQ25790_CHRG_FLAG_2, 0 },
+	{ "CHRG_FLAG_3", BQ25790_CHRG_FLAG_3, 0 },
+	{ "FAULT_FLAG_0", BQ25790_FAULT_FLAG_0, 0 },
+	{ "FAULT_FLAG_1", BQ25790_FAULT_FLAG_1, 0 },
+	{ "CHRG_MSK_0", BQ25790_CHRG_MSK_0, 1 },
+	{ "CHRG_MSK_1", BQ25790_CHRG_MSK_1, 1 },
+	{ "CHRG_MSK_2", BQ25790_CHRG_MSK_2, 1 },
+	{ "CHRG_MSK_3", BQ25790_CHRG_MSK_3, 1 },
+	{ "FAULT_MSK_0", BQ25790_FAULT_MSK_0, 1 },
+	{ "FAULT_MSK_1", BQ25790_FAULT_MSK_1, 1 },
+	{ "ADC_CTRL", BQ25790_ADC_CTRL, 1 },
+	{ "FN_DISABE_0", BQ25790_FN_DISABE_0, 1 },
+	{ "FN_DISABE_1", BQ25790_FN_DISABE_1, 1 },
+	{ "ADC_IBUS", BQ25790_ADC_IBUS_LSB, 1 },
+	{ "ADC_IBAT_MSB", BQ25790_ADC_IBAT_MSB, 1 },
+	{ "ADC_IBAT_LSB", BQ25790_ADC_IBAT_LSB, 1 },
+	{ "ADC_VBUS", BQ25790_ADC_VBUS_LSB, 1 },
+	{ "ADC_VAC1", BQ25790_ADC_VAC1, 1 },
+	{ "ADC_VAC2", BQ25790_ADC_VAC2, 1 },
+	{ "ADC_VBAT_MSB", BQ25790_ADC_VBAT_MSB, 1 },
+	{ "ADC_VBAT_LSB", BQ25790_ADC_VBAT_LSB, 1 },
+	{ "ADC_VSYS_MSB", BQ25790_ADC_VSYS_MSB, 1 },
+	{ "ADC_VSYS_LSB", BQ25790_ADC_VSYS_LSB, 1 },
+	{ "ADC_TS", BQ25790_ADC_TS, 1 },
+	{ "ADC_TDIE", BQ25790_ADC_TDIE, 1 },
+	{ "ADC_DP", BQ25790_ADC_DP, 1 },
+	{ "ADC_DM", BQ25790_ADC_DM, 1 },
+	{ "DAPM_DRV", BQ25790_DPDM_DRV, 1 },
+	{ "PART_INFO", BQ25790_PART_INFO, 0 }
+};
+
+static ssize_t bq25790_registers_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	unsigned i, n, reg_count;
+	unsigned int read_buf;
+	struct bq25790_device *data = dev_get_drvdata(dev);
+
+	reg_count = sizeof(bq25790_regs) / sizeof(bq25790_regs[0]);
+	for (i = 0, n = 0; i < reg_count; i++) {
+		regmap_read(data->regmap, bq25790_regs[i].reg, &read_buf);
+		n += scnprintf(buf + n, PAGE_SIZE - n,
+			       "%-20s = 0x%02X\n",
+			       bq25790_regs[i].name,
+			       read_buf);
+	}
+	return n;
+}
+
+static ssize_t bq25790_registers_store(struct device *dev,
+			       struct device_attribute *attr,
+			       const char *buf, size_t count)
+{
+	unsigned i, reg_count, value;
+	int error = 0;
+	char name[30];
+	struct bq25790_device *data = dev_get_drvdata(dev);
+
+	if (count >= 30) {
+		pr_err("%s:input too long\n", __func__);
+		return -1;
+	}
+
+	if (sscanf(buf, "%s %x", name, &value) != 2) {
+		pr_err("%s:unable to parse input\n", __func__);
+		return -1;
+	}
+
+	reg_count = sizeof(bq25790_regs) / sizeof(bq25790_regs[0]);
+	for (i = 0; i < reg_count; i++) {
+		if (!strcmp(name, bq25790_regs[i].name)) {
+			if (bq25790_regs[i].writeable == 1) {
+				error = regmap_write(data->regmap, bq25790_regs[i].reg, value);
+				if (error) {
+					pr_err("%s:Failed to write %s\n",
+						__func__, name);
+					return -1;
+				}
+			} else {
+				pr_err("%s:Register %s is not writeable\n",
+						__func__, name);
+					return -1;
+			}
+			return count;
+		}
+	}
+	pr_err("%s:no such register %s\n", __func__, name);
+	return -1;
+}
+
+static DEVICE_ATTR(registers, S_IWUSR | S_IRUGO,
+		bq25790_registers_show, bq25790_registers_store);
+
+static struct attribute *bq25790_attrs[] = {
+	&dev_attr_registers.attr,
+	NULL
+};
+
+static const struct attribute_group bq25790_attr_group = {
+	.attrs = bq25790_attrs,
+};
+
+int bq25790_init_debug(struct bq25790_device *bq25790)
+{
+	int ret;
+	struct bq25790_device *dbg_bq25790 = bq25790;
+
+	ret = sysfs_create_group(&dbg_bq25790->dev->kobj, &bq25790_attr_group);
+	if (ret < 0)
+		dev_err(dbg_bq25790->dev, "Failed to create sysfs: %d\n", ret);
+
+	return ret;
+}
+//debug end ==================
+
+
+/*
 static int bq25790_usb_notifier(struct notifier_block *nb, unsigned long val,
 				void *priv)
 {
@@ -167,7 +277,7 @@ static void bq25790_usb_work(struct work_struct *data)
 
 	dev_err(bq->dev, "Error switching to charger mode.\n");
 }
-
+*/
 static int bq25790_get_vbat_adc(struct bq25790_device *bq)
 {
 	int ret;
@@ -485,8 +595,10 @@ static int bq25790_get_state(struct bq25790_device *bq,
 
 	ret = regmap_read(bq->regmap, BQ25790_CHRG_STAT_0, &chrg_stat_0);
 	if (ret)
+	{
+		//printk("regmap_read %d \n",ret);
 		return ret;
-
+	}
 	state->vbus_status = chrg_stat_0 & BQ25790_VBUS_PRESENT;
 	state->online = chrg_stat_0 & BQ25790_PG_STAT;
 
@@ -544,6 +656,7 @@ static int bq25790_charger_set_property(struct power_supply *psy,
 
 	switch (prop) {
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
+		printk("===fusb302-bq25700===\n");
 		ret = bq25790_set_input_curr_lim(bq, val->intval);
 		break;
 	case POWER_SUPPLY_PROP_STATUS:
@@ -595,6 +708,7 @@ static int bq25790_charger_get_property(struct power_supply *psy,
 
 	mutex_lock(&bq->lock);
 	ret = bq25790_get_state(bq, &state);
+	//printk("ret %d \n",ret);
 	mutex_unlock(&bq->lock);
 	if (ret)
 		return ret;
@@ -636,6 +750,7 @@ static int bq25790_charger_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_MANUFACTURER:
 		val->strval = BQ25790_MANUFACTURER;
+		//printk("test===\n");
 		break;
 
 	case POWER_SUPPLY_PROP_MODEL_NAME:
@@ -935,7 +1050,7 @@ static int bq25790_power_supply_init(struct bq25790_device *bq,
 
 	psy_cfg.supplied_to = bq25790_charger_supplied_to;
 	psy_cfg.num_supplicants = ARRAY_SIZE(bq25790_charger_supplied_to);
-
+    //return 0;
 	bq->charger = devm_power_supply_register(bq->dev,
 						 &bq25790_power_supply_desc,
 						 &psy_cfg);
@@ -957,6 +1072,8 @@ static int bq25790_hw_init(struct bq25790_device *bq)
 	int i;
 
 	struct power_supply_battery_info bat_info = { };
+    
+	
 
 	if (bq->watchdog_timer) {
 		for (i = 0; i < BQ25790_NUM_WD_VAL; i++) {
@@ -967,11 +1084,12 @@ static int bq25790_hw_init(struct bq25790_device *bq)
 	}
 
 	ret = regmap_update_bits(bq->regmap, BQ25790_CHRG_CTRL_1,
-				 BQ25790_WATCHDOG_MASK, wd_reg_val);
+				 BQ25790_WATCHDOG_MASK, 0);
+    //return 0;
 
 	ret = power_supply_get_battery_info(bq->charger, &bat_info);
 	if (ret) {
-		dev_warn(bq->dev, "battery info missing, default values will be applied\n");
+		printk("1 2 battery info missing, default values will be applied\n");
 
 		bat_info.constant_charge_current_max_ua =
 				BQ25790_ICHRG_I_DEF_uA;
@@ -991,6 +1109,7 @@ static int bq25790_hw_init(struct bq25790_device *bq)
 		bq->init_data.max_vreg =
 				BQ25790_VREG_V_MAX_uV;
 	} else {
+		printk("xxxx == battery info missing, default values will be applied\n");
 		bq->init_data.max_ichg =
 			bat_info.constant_charge_current_max_ua;
 		bq->init_data.max_vreg =
@@ -999,27 +1118,33 @@ static int bq25790_hw_init(struct bq25790_device *bq)
 
 	ret = bq25790_set_ichrg_curr(bq, 
 				bat_info.constant_charge_current_max_ua);
+		printk("set_ichrg_curr == %d ua\n",bat_info.constant_charge_current_max_ua);
 	if (ret)
 		goto err_out;
 
 	ret = bq25790_set_prechrg_curr(bq, bat_info.precharge_current_ua);
+	printk("precharge_current_ua == %d ua\n",bat_info.precharge_current_ua);
 	if (ret)
 		goto err_out;
 
 	ret = bq25790_set_chrg_volt(bq,
 				bat_info.constant_charge_voltage_max_uv);
+	printk("constant_charge_voltage_max_uv == %d ua\n",bat_info.constant_charge_voltage_max_uv);
 	if (ret)
 		goto err_out;
 
 	ret = bq25790_set_term_curr(bq, bat_info.charge_term_current_ua);
+	printk("charge_term_current_ua == %d ua\n",bat_info.charge_term_current_ua);
 	if (ret)
 		goto err_out;
 
 	ret = bq25790_set_input_volt_lim(bq, bq->init_data.vlim);
+	printk("bq25790_set_input_volt_lim == %d ua\n",bq->init_data.vlim);
 	if (ret)
 		goto err_out;
 
 	ret = bq25790_set_input_curr_lim(bq, bq->init_data.ilim);
+	printk("bq25790_set_input_curr_lim == %d ua\n",bq->init_data.ilim);
 	if (ret)
 		goto err_out;
 
@@ -1064,33 +1189,37 @@ static int bq25790_parse_dt(struct bq25790_device *bq)
 
 	return 0;
 }
+//extern int bq25790_init_debug(struct bq25790_device *bq25790);
 
 static int bq25790_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
 	struct device *dev = &client->dev;
 	struct bq25790_device *bq;
+	unsigned int bq2592_id;
 	int ret;
-	printk("===================bq25790_probe============\n");
-	printk("===================bq25790_probe============\n");
-	printk("===================bq25790_probe============\n");
-	bq = devm_kzalloc(dev, sizeof(*bq), GFP_KERNEL);
+	printk("===================j j bq25790_probe============\n");
+	bq = devm_kzalloc(dev, sizeof(struct bq25790_device), GFP_KERNEL);
 	if (!bq)
 		return -ENOMEM;
 
 	bq->client = client;
 	bq->dev = dev;
-
+    
 	mutex_init(&bq->lock);
+	
+	//strncpy(bq->model_name,"1234596",6);
+    //printk("%lu %s %s %ld %ld\n",strlen(bq->model_name),id->name,bq->model_name,sizeof(bq->model_name),sizeof(id->name));
 
-	strncpy(bq->model_name, id->name, I2C_NAME_SIZE);
+	strncpy(bq->model_name, "ti,jbq25792",strlen("ti,jbq25792")+1);
 
+    //return 0;
 	bq->regmap = devm_regmap_init_i2c(client, &bq25790_regmap_config);
 	if (IS_ERR(bq->regmap)) {
 		dev_err(dev, "Failed to allocate register map\n");
 		return PTR_ERR(bq->regmap);
 	}
-
+   
 	i2c_set_clientdata(client, bq);
 
 	ret = bq25790_parse_dt(bq);
@@ -1098,8 +1227,8 @@ static int bq25790_probe(struct i2c_client *client,
 		dev_err(dev, "Failed to read device tree properties%d\n", ret);
 		return ret;
 	}
-
-	/* OTG reporting */
+   
+	/* OTG reporting 
 	bq->usb2_phy = devm_usb_get_phy(dev, USB_PHY_TYPE_USB2);
 	if (!IS_ERR_OR_NULL(bq->usb2_phy)) {
 		INIT_WORK(&bq->usb_work, bq25790_usb_work);
@@ -1113,7 +1242,7 @@ static int bq25790_probe(struct i2c_client *client,
 		bq->usb_nb.notifier_call = bq25790_usb_notifier;
 		usb_register_notifier(bq->usb3_phy, &bq->usb_nb);
 	}
-
+    */
 	if (client->irq) {
 		ret = devm_request_threaded_irq(dev, client->irq, NULL,
 						bq25790_irq_handler_thread,
@@ -1124,25 +1253,39 @@ static int bq25790_probe(struct i2c_client *client,
 			goto error_out;
 	}
 
-	ret = bq25790_power_supply_init(bq, dev);
+   
+
+	ret = bq25790_power_supply_init(bq, dev);//error
+
 	if (ret) {
 		dev_err(dev, "Failed to register power supply\n");
 		goto error_out;
 	}
+    
+    ret = regmap_read(bq->regmap, BQ25790_PART_INFO, &bq2592_id);
+    
+	printk("read Device Part number  bq25792 %d  \n",bq2592_id);
 
-	ret = bq25790_hw_init(bq);
+
+    ret = bq25790_hw_init(bq);//error
 	if (ret) {
 		dev_err(dev, "Cannot initialize the chip.\n");
 		goto error_out;
 	}
-
+   
+    ret = bq25790_init_debug(bq);
+    if (ret) {
+		printk("bq25790_init_debug error \n");
+		//goto error_out;
+	}
+   
 	return ret;
 error_out:
-	if (!IS_ERR_OR_NULL(bq->usb2_phy))
-		usb_unregister_notifier(bq->usb2_phy, &bq->usb_nb);
+	//if (!IS_ERR_OR_NULL(bq->usb2_phy))
+	//	usb_unregister_notifier(bq->usb2_phy, &bq->usb_nb);
 
-	if (!IS_ERR_OR_NULL(bq->usb3_phy))
-		usb_unregister_notifier(bq->usb3_phy, &bq->usb_nb);
+	//if (!IS_ERR_OR_NULL(bq->usb3_phy))
+	//	usb_unregister_notifier(bq->usb3_phy, &bq->usb_nb);
 	return ret;
 }
 
