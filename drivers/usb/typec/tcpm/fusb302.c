@@ -33,6 +33,17 @@
 
 #include "fusb302_reg.h"
 
+#include <linux/timer.h>
+#include <linux/gpio.h>
+#include <linux/interrupt.h>
+
+#include <linux/power_supply.h>
+#include <linux/kernel.h>
+#include <linux/ktime.h>
+#include <linux/time.h>
+
+#include <linux/of.h>
+#include <linux/of_gpio.h>
 /*
  * When the device is SNK, BC_LVL interrupt is used to monitor cc pins
  * for the current capability offered by the SRC. As FUSB302 chip fires
@@ -42,6 +53,7 @@
  */
 #define T_BC_LVL_DEBOUNCE_DELAY_MS 30
 
+static int  bq25790_en_gpio_num = -1;
 enum toggling_mode {
 	TOGGLING_MODE_OFF,
 	TOGGLING_MODE_DRP,
@@ -84,6 +96,8 @@ struct fusb302_chip {
 	bool irq_suspended;
 	bool irq_while_suspended;
 	struct gpio_desc *gpio_int_n;
+	int bq25792en_gpio;
+	struct timer_list bq25792en_gpio_timer;  // 定时器
 	int gpio_int_n_irq;
 	struct extcon_dev *extcon;
 
@@ -442,39 +456,94 @@ static int tcpm_get_vbus(struct tcpc_dev *dev)
 
 	return ret;
 }
-#include <linux/power_supply.h>
+static int get_bq25790_en_gpio(void)
+{
+	struct device_node *bq25792_node;
+
+	if(bq25790_en_gpio_num >=   0){
+		return bq25790_en_gpio_num;
+	}
+
+	if(!bq25792_node)
+	{
+		bq25792_node = of_find_node_by_path("/BQ25792-CE");
+	}
+
+	if(!bq25792_node) return -1;
+
+    bq25790_en_gpio_num = of_get_named_gpio(bq25792_node, "gpio", 0);
+
+	return bq25790_en_gpio_num;
+}
+
+#if 1
+static void bq25792en_gpio_timer_callback(struct timer_list *t)
+{
+	int ret ;
+
+	if( bq25790_en_gpio_num >= 0)
+	{
+		ret = gpio_direction_output(bq25790_en_gpio_num, 0);
+
+		printk("====bq25792en_gpio_timer_callbackn %d\n==",ret );
+	}
+    else{
+		printk("====bq25792en_gpio_timer_callbackn bq25790_en_gpio_num < 0\n==");
+	}
+}
+#endif
+
 static int tcpm_set_current_limit(struct tcpc_dev *dev, u32 max_ma, u32 mv)
 {
+#if 1
 	struct fusb302_chip *chip = container_of(dev, struct fusb302_chip,
 						 tcpc_dev);
 	union power_supply_propval value;
-	int ret = 0;
+	ktime_t kt;
+    static int start_timer_en = 0;
+	//int ret = 0;
 	max_ma*=1000;
 	mv*=1000;
 
+	value.intval = max_ma-500000;
 
-	//if(max_ma > 1000000) max_ma = 1000000;
-	value.intval = max_ma;
-     
 
-	//ret = power_supply_set_property(chip->psy, POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT, &value);
-    
+	if(!chip->battery_psy)
+    chip->battery_psy = power_supply_get_by_name("bq25790-battery");
 
-	// if (ret < 0) {
-      //  pr_err("====Failed to set input current limit %d %d=== ret = %d\n",max_ma,mv,ret);
-        //return ret;
-    //}
+	if(!chip->battery_psy){
+		pr_err("==== chip->battery_psy ===\n");
+		return 0;
+	}
 
-    ret = power_supply_set_property(chip->battery_psy, POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT, &value);
-	
-	if (ret < 0) 
+    if(get_bq25790_en_gpio() < 0){
+		pr_err("==== chip->bq25792en_gpio  ===\n");
+		return 0;
+	}
+
+    if( max_ma < 900000){
+		gpio_direction_output(bq25790_en_gpio_num, 1);
+		return 0;
+	}
+	else{
+		power_supply_set_property(chip->battery_psy, POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT, &value);
+	}
+
+	kt = ktime_get_boottime();
+	if(ktime_to_ms(kt) > 40000)
 	{
-        pr_err("====Failed to set battery_psy  current limit %d %d=== ret = %d\n",max_ma,mv,ret);
-        return ret;
-    }
-
-    pr_info("Successfully set input battery_psy current limit to %d\n", max_ma);
-
+		gpio_direction_output(bq25790_en_gpio_num, 0);
+		pr_info("gpio_direction_output en %lld ma = %d num = %d\n",ktime_to_ms(kt) ,max_ma,bq25790_en_gpio_num);
+	}else{
+		if(start_timer_en == 0){
+		start_timer_en = 1;
+		timer_setup(&(chip->bq25792en_gpio_timer), bq25792en_gpio_timer_callback, 0);
+		mod_timer(&(chip->bq25792en_gpio_timer), jiffies + msecs_to_jiffies(10000));
+		}
+	}
+		 
+	//power_supply_set_property(chip->battery_psy, POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT, &val);
+    #endif
     return 0;
 }
 
@@ -1579,6 +1648,15 @@ static void fusb302_irq_work(struct kthread_work *work)
 		vbus_present = !!(status0 & FUSB_REG_STATUS0_VBUSOK);
 		fusb302_log(chip, "IRQ: VBUS_OK, vbus=%s",
 			    vbus_present ? "On" : "Off");
+		if(!vbus_present)
+		{
+			fusb302_log(chip, "======= OUT %d =======\n",bq25790_en_gpio_num);
+
+			if(bq25790_en_gpio_num >= 0)
+			{
+				gpio_direction_output(bq25790_en_gpio_num, 1);
+			}
+		}
 		if (vbus_present != chip->vbus_present) {
 			chip->vbus_present = vbus_present;
 			tcpm_vbus_change(chip->tcpm_port);
@@ -1722,6 +1800,19 @@ static struct fwnode_handle *fusb302_fwnode_get(struct device *dev)
 
 	return fwnode;
 }
+// 定时器回调函数
+/*
+static void bq25792en_gpio_timer_callback(struct timer_list *t)
+{
+	int ret =  gpio_direction_output(chip->bq25792en_gpio, 0);
+	
+	printk("====bq25792en_gpio_timer_callbackn %d\n==",ret );
+
+}
+			 //timer_setup(&(chip->bq25792en_gpio_timer), bq25792en_gpio_timer_callback, 0);
+			 //mod_timer(&(chip->bq25792en_gpio_timer), jiffies + msecs_to_jiffies(10000));
+*/
+
 
 static int fusb302_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
@@ -1731,7 +1822,8 @@ static int fusb302_probe(struct i2c_client *client,
 	struct device *dev = &client->dev;
 	const char *name;
 	int ret = 0;
-
+	
+    //struct gpio_desc * bq25792en_gpio;
     printk("======================fusb302_probe========================\n");
 
 
@@ -1762,16 +1854,17 @@ static int fusb302_probe(struct i2c_client *client,
 			return -EPROBE_DEFER;
 	}
 
-	chip->psy = power_supply_get_by_name("bq25790-charger");
+	//chip->psy = power_supply_get_by_name("bq25790-charger");
 
-	if (!chip->psy) {
-    	printk("=====Failed to get bq25790-charger power supply====\n");
-    	return -ENODEV;
-	}
-    else{
-		  printk("=====get bq25790-charger power supply ok ====\n");
-	}
-	///////////////////////////////////////////////////////////////
+	//if (!chip->psy) {
+    //	printk("=====Failed to get bq25790-charger power supply====\n");
+    //	return -ENODEV;
+	//}
+    //else{
+	//	  printk("=====get bq25790-charger power supply ok ====\n");
+	//}
+
+	#if 1
 	chip->battery_psy = power_supply_get_by_name("bq25790-battery");
 
 	if (!chip->battery_psy) {
@@ -1781,7 +1874,9 @@ static int fusb302_probe(struct i2c_client *client,
     else{
 		  printk("=====get bq25790-battery power supply ok ====\n");
 	}
-	
+	#endif
+
+
 	chip->vbus = devm_regulator_get(chip->dev, "vbus");
 	if (IS_ERR(chip->vbus))
 		return PTR_ERR(chip->vbus);
@@ -1816,6 +1911,7 @@ static int fusb302_probe(struct i2c_client *client,
 	}
 
 	chip->tcpm_port = tcpm_register_port(&client->dev, &chip->tcpc_dev);
+
 	if (IS_ERR(chip->tcpm_port)) {
 		fwnode_handle_put(chip->tcpc_dev.fwnode);
 		ret = PTR_ERR(chip->tcpm_port);
@@ -1831,8 +1927,28 @@ static int fusb302_probe(struct i2c_client *client,
 		dev_err(dev, "cannot request IRQ for GPIO Int_N, ret=%d", ret);
 		goto tcpm_unregister_port;
 	}
+
 	enable_irq_wake(chip->gpio_int_n_irq);
+
 	i2c_set_clientdata(client, chip);
+
+#if 0
+	 bq25792_node = of_find_node_by_path("/BQ25792-CE");
+
+    if (bq25792_node) 
+	{
+		chip->bq25792en_gpio = of_get_named_gpio(bq25792_node, "gpio", 0);
+
+        bq25790_en_gpio_num =  chip->bq25792en_gpio;
+
+		if ( 0 <= chip->bq25792en_gpio )
+		{
+			 printk("==Successfully find BQ25792_CE node ==\n");
+			 //timer_setup(&(chip->bq25792en_gpio_timer), bq25792en_gpio_timer_callback, 0);
+			 //mod_timer(&(chip->bq25792en_gpio_timer), jiffies + msecs_to_jiffies(10000));
+		}
+    }
+#endif 
 
 	return ret;
 
@@ -1842,7 +1958,7 @@ tcpm_unregister_port:
 destroy_workqueue:
 	fusb302_debugfs_exit(chip);
 	destroy_workqueue(chip->wq);
-
+   
 	return ret;
 }
 
