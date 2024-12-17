@@ -225,16 +225,9 @@
 };
 
 &uart0 {
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&uart0m2_xfer>;
-};
-
-// HGD, GPS
-&uart7 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&uart7m2_xfer>;
+	pinctrl-0 = <&uart0m2_xfer>;
 };
 
 // 红外机芯 (topeet board, for NGD visible debug)
@@ -254,16 +247,30 @@
 
 // HGD, connect to IR Motor.
 &uart4 {
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&uart4m2_xfer>;
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4m2_xfer>;
 };
 
 // HGD, connect to IR sensor.
 &uart5 {
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&uart5m0_xfer>;
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5m0_xfer>;
+};
+
+// HGD, Motor
+&uart6 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart6m2_xfer>;
+};
+
+// HGD, GPS
+&uart7 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m2_xfer>;
 };
 
 &i2c6 {
