@@ -144,7 +144,7 @@
 		enable-active-high;
 		gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
 	};
-        
+
 	BQ25792-CE {
  		compatible = "regulator-fixed";
 		regulator-name = "BQ25792_CE";
@@ -153,27 +153,6 @@
 		enable-active-high;
 		gpio = <&gpio1 RK_PA6 GPIO_ACTIVE_HIGH>;
 	};
-        
-	BQ25792-CE {
- 		compatible = "regulator-fixed";
-		regulator-name = "BQ25792_CE";
-		regulator-boot-on;
-		regulator-always-on;
-		enable-active-high;
-		gpio = <&gpio1 RK_PA6 GPIO_ACTIVE_HIGH>;
-	};
-
-	/* HGD-NGD_Vis DEBUG */
-	// NGD_HGD_vis_en: HGD-HGD-vis-en {
-	// 	compatible = "regulator-fixed";
-	// 	regulator-name = "HGD-HGD-vis-en";
-	// 	regulator-boot-on;
-	// 	regulator-always-on;
-	// 	enable-active-high;
-	// 	gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
-	// };
-
-
 
 	/* HGD regulator dummy consumer */
 	dummy_consumer {
