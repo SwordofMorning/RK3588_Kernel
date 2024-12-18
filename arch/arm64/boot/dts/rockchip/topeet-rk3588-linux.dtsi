@@ -194,12 +194,19 @@
 	status = "okay";
 };
 
+//&gpio1 {
+//	status = "okay"; 
+ //   gpio-hog;
+ //   gpio = <6 GPIO_ACTIVE_HIGH>;  // GPIO 引脚号及初始状态
+ //   output-high;
+ //   line-name = "25792_ce_gpio";  // GPIO 的名称
+//};
+
 &i2c6 {
 	status = "okay";
 
 	usbc0: fusb302@22 {
 		compatible = "fcs,fusb302";
-		
 		reg = <0x22>;
 		interrupt-parent = <&gpio3>;
 		interrupts = <RK_PB2 IRQ_TYPE_LEVEL_LOW>;
@@ -207,6 +214,8 @@
 		pinctrl-0 = <&usbc0_int>;
 		vbus-supply = <&vbus5v0_typec>;
 		#bq25792-supply = <&bq25700>;
+		bq25792en-gpio = <&gpio1 RK_PA6 GPIO_ACTIVE_HIGH>;
+		
 		status = "okay";
 
 		ports {
