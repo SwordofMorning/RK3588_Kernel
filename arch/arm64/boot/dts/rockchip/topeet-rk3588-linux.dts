@@ -142,7 +142,7 @@
 		regulator-boot-on;
 		regulator-always-on;
 		enable-active-high;
-		gpio = <&gpio0 RK_PD5 GPIO_ACTIVE_HIGH>;
+		gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
 	};
 
 	/* HGD-NGD_Vis DEBUG */
@@ -155,15 +155,6 @@
 	// 	gpio = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
 	// };
 
-		 test_ir: test-ir {
-	 	compatible = "regulator-fixed";
-	 	regulator-name = "test_ir";
-	 	regulator-boot-on;
-	 	regulator-always-on;
-	 	enable-active-high;
-	 	gpio = <&gpio1 RK_PC7 GPIO_ACTIVE_HIGH>;
-	 };
-
 	/* HGD regulator dummy consumer */
 	dummy_consumer {
 		compatible = "dummy-consumer";
@@ -175,7 +166,7 @@
 		// debug-supply = <&NGD_HGD_vis_en>;
 	};
 
-        //wifi 
+	// wifi
 	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		pinctrl-names = "default";
@@ -234,16 +225,9 @@
 };
 
 &uart0 {
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&uart0m2_xfer>;
-};
-
-// HGD,
-&uart7 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&uart7m2_xfer>;
+	pinctrl-0 = <&uart0m2_xfer>;
 };
 
 // 红外机芯 (topeet board, for NGD visible debug)
@@ -263,16 +247,30 @@
 
 // HGD, connect to IR Motor.
 &uart4 {
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&uart4m2_xfer>;
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4m2_xfer>;
 };
 
 // HGD, connect to IR sensor.
 &uart5 {
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&uart5m0_xfer>;
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5m0_xfer>;
+};
+
+// HGD, Motor
+&uart6 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart6m2_xfer>;
+};
+
+// HGD, GPS
+&uart7 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m2_xfer>;
 };
 
 &i2c6 {
