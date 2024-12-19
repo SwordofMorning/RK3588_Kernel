@@ -238,8 +238,8 @@
 			default-state = "off";
 		};
 
-		enable_red {
-			label = "enable_red";
+		enable_laser {
+			label = "enable_laser";
 			gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
