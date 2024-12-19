@@ -162,7 +162,6 @@
 		vcc1-supply = <&vcc_1v8_en>;
 		vcc3-supply = <&vcc_3v3_en>;
 		vcc12-supply = <&vcc_12v_en>;
-		// debug-supply = <&NGD_HGD_vis_en>;
 	};
 
 	// wifi
@@ -220,6 +219,26 @@
 			248 249 250 251 252 253 254 255
 		>;
 		default-brightness-level = <200>;
+	};
+
+	jp_hgd_gpio_ctl: gpio-controller {
+		compatible = "jp,hgd-gpio-controller";
+		status = "okay";
+
+		// enable_refrigerator {
+		//     label = "enable_refrigerator";
+		//     gpios = <&gpio1 RK_PC7 GPIO_ACTIVE_LOW>;
+		// };
+
+		enable_light {
+			label = "enable_light";
+			gpios = <&gpio1 RK_PD6 GPIO_ACTIVE_LOW>;
+		};
+
+		enable_red {
+			label = "enable_red";
+			gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
+		};
 	};
 };
 

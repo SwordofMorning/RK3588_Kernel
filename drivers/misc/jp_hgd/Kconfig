@@ -1,0 +1,6 @@
+config JP_HGD
+    tristate "JP_HGD"
+    select JP_HGD_GPIO
+    default y
+    help
+      Enable HGD GPIO Controller.

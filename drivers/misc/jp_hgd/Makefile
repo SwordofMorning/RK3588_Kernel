@@ -1,0 +1,1 @@
+obj-$(CONFIG_JP_HGD_GPIO) += jp_hgd_gpio.o
