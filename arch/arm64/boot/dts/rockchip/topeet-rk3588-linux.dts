@@ -225,19 +225,23 @@
 		compatible = "jp,hgd-gpio-controller";
 		status = "okay";
 
-		// enable_refrigerator {
-		//     label = "enable_refrigerator";
-		//     gpios = <&gpio1 RK_PC7 GPIO_ACTIVE_LOW>;
-		// };
+		enable_refrigerator {
+		    label = "enable_refrigerator";
+		    gpios = <&gpio1 RK_PC7 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+			startup-delay-us = <1000>;
+		};
 
 		enable_light {
 			label = "enable_light";
 			gpios = <&gpio1 RK_PD6 GPIO_ACTIVE_LOW>;
+			default-state = "off";
 		};
 
 		enable_red {
 			label = "enable_red";
 			gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
+			default-state = "off";
 		};
 	};
 };
