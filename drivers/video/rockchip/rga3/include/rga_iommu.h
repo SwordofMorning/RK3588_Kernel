@@ -76,4 +76,3 @@ int rga_iommu_bind(void);
 void rga_iommu_unbind(void);
 
 #endif
-
