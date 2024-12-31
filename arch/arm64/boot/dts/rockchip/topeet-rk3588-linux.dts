@@ -243,6 +243,12 @@
 			gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
+
+		system_power_on {
+			label = "system_power_on";
+			gpios = <&gpio1 RK_PD5 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
 	};
 };
 
