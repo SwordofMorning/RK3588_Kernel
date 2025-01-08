@@ -106,6 +106,29 @@ static ssize_t reinit_store(struct device *dev,
 
 static DEVICE_ATTR_WO(reinit);
 
+static ssize_t enable_store(struct device *dev,
+                           struct device_attribute *attr,
+                           const char *buf, size_t count)
+{
+    int value;
+
+    if (kstrtoint(buf, 10, &value)) {
+        dev_err(dev, "Invalid input for power\n");
+        return -EINVAL;
+    }
+
+    if (value != 0 && value != 1) {
+        dev_err(dev, "Invalid value for power (must be 0 or 1)\n");
+        return -EINVAL;
+    }
+
+    gpiod_set_value_cansleep(shared_gpios.power_gpio, value);
+
+    return count;
+}
+
+static DEVICE_ATTR_WO(enable);
+
 static int gz039pbc03_probe(struct i2c_client *client,
                           const struct i2c_device_id *id)
 {
@@ -151,7 +174,9 @@ static int gz039pbc03_probe(struct i2c_client *client,
 
     dev_info(dev, "gz039pbc03 device at address 0x%02x has been initialized\n", client->addr);
 
+    // XJT: Feature reinit and power ctl
     device_create_file(&client->dev, &dev_attr_reinit);
+    device_create_file(&client->dev, &dev_attr_enable);
 
     return 0;
 }
@@ -159,6 +184,9 @@ static int gz039pbc03_probe(struct i2c_client *client,
 
 static int gz039pbc03_remove(struct i2c_client *client)
 {
+    device_remove_file(&client->dev, &dev_attr_enable);
+    device_remove_file(&client->dev, &dev_attr_reinit);
+
     if (atomic_dec_and_test(&shared_gpios.refcount)) {
         // 最后一个引用时释放 GPIO
         // devm_gpiod_put() 不是必需的，因为 devm_ 函数会处理释放
